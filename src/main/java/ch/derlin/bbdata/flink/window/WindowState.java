@@ -37,6 +37,21 @@ public class WindowState {
         long ts = measure.timestamp.getTime();
         objectId = measure.objectId;
 
+        // update time
+        if (timeAdvance == 0) {
+            // first record
+            timeAdvance = lastCleanup = ts;
+        } else if (ts < timeAdvance - allowedLateness) {
+            // late record  TODO
+            if (!map.containsKey(key)) {
+                // throw a new record only if the window is not still in cache
+                collector.collect(AggregationConfiguration.getLateAccumulatorFor(measure, key, windowSizeMillis));
+            }
+        } else {
+            if (ts > timeAdvance) timeAdvance = key;
+        }
+
+        // accumulate
         IAccumulator acc;
         if (map.containsKey(key)) {
             acc = map.get(key);
@@ -49,18 +64,10 @@ public class WindowState {
 
         acc.fold(measure);
 
-        if (timeAdvance == 0) {
-            // first record
-            timeAdvance = ts;
-        } else if (ts < timeAdvance - allowedLateness) {
-            // late record  TODO
-            collector.collect(AggregationConfiguration.getLateAccumulatorFor(measure, key, windowSizeMillis));
-        } else {
-            if (ts > timeAdvance) timeAdvance = key;
-            if (timeAdvance - lastCleanup > windowSizeMillis) {
-                finalizeOldWindows(collector);
-                lastCleanup = timeAdvance;
-            }
+        // cleanup
+        if (timeAdvance - lastCleanup > windowSizeMillis) {
+            finalizeOldWindows(collector);
+            lastCleanup = timeAdvance;
         }
     }
 

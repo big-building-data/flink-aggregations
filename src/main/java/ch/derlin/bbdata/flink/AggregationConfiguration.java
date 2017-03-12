@@ -27,14 +27,17 @@ public class AggregationConfiguration {
     }
 
     public static IAccumulator getLateAccumulatorFor(Measure m, long windowStart, long windowSizeMillis) {
+        assert isAggregationTarget(m);
         LateRecordAccumulator acc = new LateRecordAccumulator(m, getDateClusteringKeyFor(windowStart, windowSizeMillis));
         acc.objectId = m.objectId;
+        acc.minutes = toMinutes(windowSizeMillis);
         acc.timestamp = new Date(windowStart);
         acc.date = getDateClusteringKeyFor(windowStart, windowSizeMillis);
         return acc;
     }
+
     public static IAccumulator getAccumulatorFor(Measure m, long windowStart, long windowSizeMillis) {
-        if (!isAggregationTarget(m)) return null;
+        assert isAggregationTarget(m);
         BasicAccumulator acc;
 
         if (BASIC_AGGR_UNITS.contains(m.unitSymbol)) acc = new BasicAccumulator();
@@ -43,6 +46,7 @@ public class AggregationConfiguration {
         acc.windowTime = windowStart;
         acc.objectId = m.objectId;
         acc.timestamp = new Date(windowStart);
+        acc.minutes = toMinutes(windowSizeMillis);
         acc.date = getDateClusteringKeyFor(windowStart, windowSizeMillis);
         return acc;
     }

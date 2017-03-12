@@ -60,11 +60,14 @@ public class CassandraSink extends RichSinkFunction<IAccumulator> {
 
     @Override
     public void invoke(IAccumulator iAccumulator) throws Exception {
+        // TODO concurrency ??
         if (iAccumulator instanceof AggregationRecord) {
             AggregationRecord record = (AggregationRecord) iAccumulator;
-            AggregationRecord oldRecord = mapper.get(record.objectId, record.date, record.timestamp);
+
+            AggregationRecord oldRecord = mapper.get(record.minutes, record.objectId, record.date, record.timestamp);
             if (oldRecord != null) {
                 if (iAccumulator instanceof LateRecordAccumulator) {
+                    System.err.printf("update : %s | %s", oldRecord, iAccumulator);
                     oldRecord.addOne(((LateRecordAccumulator) iAccumulator).measure);
                     mapper.save(oldRecord);
                 } else {

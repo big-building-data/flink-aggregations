@@ -16,6 +16,7 @@ public class LateRecordAccumulator extends AggregationRecord implements IAccumul
     public LateRecordAccumulator(Measure measure, String dateClusteringKey) {
         this.measure = measure;
         this.dateClusteringKey = dateClusteringKey;
+        this.count = 1;
     }
 
     @Override

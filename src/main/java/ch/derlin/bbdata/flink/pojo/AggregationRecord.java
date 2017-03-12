@@ -25,10 +25,14 @@ import static java.lang.Float.isNaN;
 public class AggregationRecord {
 
     @PartitionKey(0)
+    @Column(name = "minutes")
+    public int minutes;
+
+    @PartitionKey(1)
     @Column(name = "object_id")
     public int objectId = -1;
 
-    @PartitionKey(1)
+    @PartitionKey(2)
     public String date;
 
     @ClusteringColumn
@@ -56,16 +60,16 @@ public class AggregationRecord {
     public float k = NaN;
 
     @Column(name = "k_sum")
-    public float kSum = 0;
+    public float kSum = NaN;
 
     @Column(name = "k_sum_2")
-    public float kSumSquared = 0;
+    public float kSumSquared = NaN;
 
     @Column(name = "std")
-    public float std;
+    public float std = NaN;
 
     @Column(name = "mean")
-    public float mean;
+    public float mean = NaN;
 
 
     // ----------------------------------------------------
@@ -106,6 +110,17 @@ public class AggregationRecord {
     public void updateMean() {
         assert count != 0;
         mean = sum / count;
+    }
+
+    @Override
+    public String toString() {
+        return "AggregationRecord{" +
+                "minutes=" + minutes +
+                ", objectId=" + objectId +
+                ", date='" + date + '\'' +
+                ", timestamp=" + timestamp +
+                ", count=" + count +
+                '}';
     }
 
 
