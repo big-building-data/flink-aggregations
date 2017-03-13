@@ -4,6 +4,8 @@ import ch.derlin.bbdata.flink.AggregationConfiguration;
 import ch.derlin.bbdata.flink.accumulators.IAccumulator;
 import ch.derlin.bbdata.flink.pojo.Measure;
 import org.apache.flink.util.Collector;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -15,6 +17,10 @@ import java.util.TreeMap;
  * @author Lucy Linder <lucy.derlin@gmail.com>
  */
 public class WindowState {
+
+    // if not transcient, will be restored with the state and we end up with the
+    // internal logger (LOG.logger) as null --> nullpointerexception upon logging
+    private transient Logger LOG = LoggerFactory.getLogger(WindowState.class);
 
     public TreeMap<Long, IAccumulator> map = new TreeMap<>();
     public long timeAdvance, lastCleanup;
@@ -44,8 +50,11 @@ public class WindowState {
         } else if (ts < timeAdvance - allowedLateness) {
             // late record  TODO
             if (!map.containsKey(key)) {
+                LOG.warn("very late record: currentTime={}, record '{}'", timeAdvance, measure);
                 // throw a new record only if the window is not still in cache
                 collector.collect(AggregationConfiguration.getLateAccumulatorFor(measure, key, windowSizeMillis));
+            } else {
+                LOG.trace("late record '{}', but window still in scope", timeAdvance, measure);
             }
         } else {
             if (ts > timeAdvance) timeAdvance = key;
@@ -83,16 +92,16 @@ public class WindowState {
                 acc.finalise();
                 collector.collect(acc);
                 map.remove(key);
-                System.out.printf("%s: finalized window ## %s%n", this, acc);
+                LOG.trace("finalized window '{}'", acc);
             }
         }//end for
-        System.out.printf("%s: CLEANUP: windows_left=%d%n", this, map.size());
+        LOG.trace("cleanup: {}", this);
     }
 
     public void flush(Collector<IAccumulator> collector) {
         for (IAccumulator accumulator : map.values()) {
             collector.collect(accumulator);
-            System.out.println("CLEAR ALL : " + accumulator);
+            LOG.trace("cleanup window '{}'", accumulator);
         }//end for
         map.clear();
     }

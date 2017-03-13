@@ -67,17 +67,17 @@ public class CassandraSink extends RichSinkFunction<IAccumulator> {
             AggregationRecord oldRecord = mapper.get(record.minutes, record.objectId, record.date, record.timestamp);
             if (oldRecord != null) {
                 if (iAccumulator instanceof LateRecordAccumulator) {
-                    System.err.printf("update : %s | %s", oldRecord, iAccumulator);
+                    LOGGER.info("updating record : record={} | acc={}", oldRecord, iAccumulator);
                     oldRecord.addOne(((LateRecordAccumulator) iAccumulator).measure);
                     mapper.save(oldRecord);
                 } else {
-                    System.err.printf("Old record exists !!! old=%s | new=%s", oldRecord, record);
+                    LOGGER.warn("overriding record: old={} | new={}", oldRecord, record);
                 }
             }
             mapper.save(record);
 
         } else {
-            System.err.println("in cassandra sink: got something else than an aggregation record " + iAccumulator);
+            LOGGER.error("Got something else than an aggregation record: {} -- {} ", iAccumulator.getClass(), iAccumulator);
         }
     }
 

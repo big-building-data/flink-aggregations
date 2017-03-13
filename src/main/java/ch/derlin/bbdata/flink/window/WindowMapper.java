@@ -10,6 +10,8 @@ import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.functions.RichProcessFunction;
 import org.apache.flink.util.Collector;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * date: 06.03.17
@@ -17,6 +19,8 @@ import org.apache.flink.util.Collector;
  * @author Lucy Linder <lucy.derlin@gmail.com>
  */
 public class WindowMapper extends RichProcessFunction<Measure, IAccumulator> {
+
+    private Logger LOG = LoggerFactory.getLogger( WindowMapper.class );
 
     protected transient ValueState<WindowState> state;
     private transient long timeout, lastProcessingTime;
@@ -61,7 +65,7 @@ public class WindowMapper extends RichProcessFunction<Measure, IAccumulator> {
     public void onTimer(long timestamp, OnTimerContext context, Collector<IAccumulator> collector) throws Exception {
         if (timestamp - lastProcessingTime >= timeout) {
             WindowState currentState = state.value();
-            System.out.println("CLEANUP TRIGGERED for " + currentState);
+            LOG.trace("timeout: triggering cleanup of {}", currentState);
             currentState.flush(collector);
             state.update(currentState);
         }

@@ -33,7 +33,7 @@ public class Main {
     private static final Logger LOGGER = LoggerFactory.getLogger(Main.class);
 
     // kafka
-    private static final Object KAFKA_CONSUMER_GROUP = "derlin-bbdata-custom-window-test-01";// + r.nextInt();
+    private static final Object KAFKA_CONSUMER_GROUP = "derlin-bbdata-custom-window-test-04";// + r.nextInt();
 
 
     public static void main(String[] args) throws Exception {
