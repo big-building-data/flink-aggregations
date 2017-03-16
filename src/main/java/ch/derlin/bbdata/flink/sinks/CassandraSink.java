@@ -69,13 +69,20 @@ public class CassandraSink extends RichSinkFunction<IAccumulator> {
                 if (iAccumulator instanceof LateRecordAccumulator) {
                     LOGGER.info("updating record : record={} | acc={}", oldRecord, iAccumulator);
                     oldRecord.addOne(((LateRecordAccumulator) iAccumulator).measure);
+                    LOGGER.info("updating record : new_record={}", oldRecord);
                     mapper.save(oldRecord);
                 } else {
-                    LOGGER.warn("overriding record: old={} | new={}", oldRecord, record);
+                    if (oldRecord.count < record.count) {
+                        LOGGER.warn("OVERRIDE => overriding: old={} | new={}", oldRecord, record);
+                        mapper.save(record);
+                    } else {
+                        LOGGER.warn("OVERRIDE => skipping: old={} | new={}", oldRecord, record);
+                    }
                 }
+            }else{
+                mapper.save(record);
             }
-            mapper.save(record);
-
+            
         } else {
             LOGGER.error("Got something else than an aggregation record: {} -- {} ", iAccumulator.getClass(), iAccumulator);
         }
