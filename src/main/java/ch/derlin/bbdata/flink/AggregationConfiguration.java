@@ -19,7 +19,7 @@ import java.util.List;
 public class AggregationConfiguration {
 
     // filtering
-    public static final List<String> BASIC_AGGR_UNITS = Arrays.asList("lx,measure/s".split(","));
+    public static final List<String> BASIC_AGGR_UNITS = Arrays.asList("lx,m/s".split(","));
     public static final List<String> ADVANCED_AGGR_UNITS = Arrays.asList("%,A,ppm,V,W,°C".split(","));
 
     public static boolean isAggregationTarget(Measure m) {
