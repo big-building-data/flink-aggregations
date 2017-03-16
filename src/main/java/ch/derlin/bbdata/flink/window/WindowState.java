@@ -48,13 +48,13 @@ public class WindowState {
             // first record
             timeAdvance = lastCleanup = ts;
         } else if (ts < timeAdvance - allowedLateness) {
-            // late record  TODO
             if (!map.containsKey(key)) {
-                LOG.warn("very late record: currentTime={}, record '{}'", timeAdvance, measure);
+                LOG.warn("LATE RECORD: time={}, '{}'", timeAdvance, measure);
                 // throw a new record only if the window is not still in cache
                 collector.collect(AggregationConfiguration.getLateAccumulatorFor(measure, key, windowSizeMillis));
+                return;
             } else {
-                LOG.trace("late record '{}', but window still in scope", timeAdvance, measure);
+                LOG.trace("LATE RECORD: (window in scope) '{}'", timeAdvance, measure);
             }
         } else {
             if (ts > timeAdvance) timeAdvance = key;
