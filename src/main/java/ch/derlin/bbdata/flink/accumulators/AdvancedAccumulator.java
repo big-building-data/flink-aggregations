@@ -41,7 +41,7 @@ public class AdvancedAccumulator extends BasicAccumulator {
     @Override
     public String toString() {
 
-        return String.format("%s, min=%.2f, std=%f", super.toString(), min, getStd());
+        return String.format("%s, min=%.2f, std=%f", super.toString(), min, std);
 
     }
 

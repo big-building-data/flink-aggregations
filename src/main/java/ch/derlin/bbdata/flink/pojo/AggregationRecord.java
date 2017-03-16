@@ -1,5 +1,6 @@
 package ch.derlin.bbdata.flink.pojo;
 
+import ch.derlin.bbdata.commons.dateutils.DateTimeFormatUTC;
 import com.datastax.driver.mapping.annotations.ClusteringColumn;
 import com.datastax.driver.mapping.annotations.Column;
 import com.datastax.driver.mapping.annotations.PartitionKey;
@@ -23,6 +24,8 @@ import static java.lang.Float.isNaN;
         caseSensitiveKeyspace = false,
         caseSensitiveTable = false)
 public class AggregationRecord {
+
+    private static transient DateTimeFormatUTC dtf = new DateTimeFormatUTC();
 
     @PartitionKey(0)
     @Column(name = "minutes")
@@ -118,7 +121,7 @@ public class AggregationRecord {
                 "minutes=" + minutes +
                 ", objectId=" + objectId +
                 ", date='" + date + '\'' +
-                ", timestamp=" + timestamp +
+                ", timestamp=" + dtf.format(timestamp) +
                 ", count=" + count +
                 '}';
     }
@@ -159,121 +162,6 @@ public class AggregationRecord {
             this.lastMeasureTimestamp = other.lastMeasureTimestamp;
             this.lastMeasure = other.lastMeasure;
         }
-    }
-
-    // ----------------------------------- getter/setter (for the mapper only)
-
-
-    public int getObjectId() {
-        return objectId;
-    }
-
-    public void setObjectId(int objectId) {
-        this.objectId = objectId;
-    }
-
-    public String getDate() {
-        return date;
-    }
-
-    public void setDate(String date) {
-        this.date = date;
-    }
-
-    public Date getTimestamp() {
-        return timestamp;
-    }
-
-    public void setTimestamp(Date timestamp) {
-        this.timestamp = timestamp;
-    }
-
-    public int getCount() {
-        return count;
-    }
-
-    public void setCount(int count) {
-        this.count = count;
-    }
-
-    public float getMin() {
-        return min;
-    }
-
-    public void setMin(float min) {
-        this.min = min;
-    }
-
-    public float getMax() {
-        return max;
-    }
-
-    public void setMax(float max) {
-        this.max = max;
-    }
-
-    public float getSum() {
-        return sum;
-    }
-
-    public void setSum(float sum) {
-        this.sum = sum;
-    }
-
-    public long getLastMeasureTimestamp() {
-        return lastMeasureTimestamp;
-    }
-
-    public void setLastMeasureTimestamp(long lastMeasureTimestamp) {
-        this.lastMeasureTimestamp = lastMeasureTimestamp;
-    }
-
-    public float getStd() {
-        return std;
-    }
-
-    public void setStd(float std) {
-        this.std = std;
-    }
-
-    public float getMean() {
-        return mean;
-    }
-
-    public void setMean(float mean) {
-        this.mean = mean;
-    }
-
-    public float getLastMeasure() {
-        return lastMeasure;
-    }
-
-    public void setLastMeasure(float lastMeasure) {
-        this.lastMeasure = lastMeasure;
-    }
-
-    public float getK() {
-        return k;
-    }
-
-    public void setK(float k) {
-        this.k = k;
-    }
-
-    public float getkSum() {
-        return kSum;
-    }
-
-    public void setkSum(float kSum) {
-        this.kSum = kSum;
-    }
-
-    public float getkSumSquared() {
-        return kSumSquared;
-    }
-
-    public void setkSumSquared(float kSumSquared) {
-        this.kSumSquared = kSumSquared;
     }
 
 }

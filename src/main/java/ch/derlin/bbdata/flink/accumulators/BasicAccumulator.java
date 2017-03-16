@@ -38,6 +38,6 @@ public class BasicAccumulator extends AggregationRecord implements IAccumulator 
     @Override
     public String toString() {
         return String.format("[%4d, %s] count=%d, max=%.2f, mean=%.2f", //
-                objectId, DateUtil.dateToString(windowTime), count, max, getMean());
+                objectId, DateUtil.dateToString(windowTime), count, max, mean);
     }
 }
