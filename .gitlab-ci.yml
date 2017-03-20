@@ -1,0 +1,19 @@
+image: maven:3-jdk-7
+stages:
+  - build
+normal-job:
+  stage: build
+  script:
+    - mvn package -B
+  except:
+    - tags
+release-job:
+  stage: build
+  script:
+    - mvn package -B
+    - mv target/*full.jar .
+  artifacts:
+    paths:
+    - ./*full.jar
+  only:
+    - tags
