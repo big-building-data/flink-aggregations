@@ -20,6 +20,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Properties;
 
+import static org.apache.flink.streaming.api.environment.CheckpointConfig.ExternalizedCheckpointCleanup.RETAIN_ON_CANCELLATION;
+
 /**
  * date: 19/12/16
  *
@@ -27,13 +29,12 @@ import java.util.Properties;
  */
 public class Main {
 
-    private static final long DEFAULT_CHECKPOINT_INTERVAL = 5000;
+    // general
+    private static final long DEFAULT_CHECKPOINT_INTERVAL = 10000;
     private static String UID_PREFIX = "ch.derlin.bbdata.flink.custom.window.";
+
     // logging
     private static final Logger LOGGER = LoggerFactory.getLogger(Main.class);
-
-    // kafka
-    private static final Object KAFKA_CONSUMER_GROUP = "derlin-bbdata-custom-window-test-04";// + r.nextInt();
 
 
     public static void main(String[] args) throws Exception {
@@ -43,48 +44,64 @@ public class Main {
             System.exit(1);
         }
 
-        TimeZoneUtils.setDefaultToUTC();
+        try {
+            TimeZoneUtils.setDefaultToUTC();
 
-        // get path to configuration file
-        Path configPath = Paths.get(args[0]);
-        LOGGER.info("Loading properties from file: {}", configPath);
+            // get path to configuration file
+            Path configPath = Paths.get(args[0]);
+            LOGGER.info("Loading properties from file: {}", configPath);
 
-        ParameterTool parameters = ParameterTool.fromPropertiesFile(configPath.toAbsolutePath().toString());
+            ParameterTool parameters = ParameterTool.fromPropertiesFile(configPath.toAbsolutePath().toString());
+            LOGGER.info("properties: {}", parameters.toMap());
 
-        // ensure granularity is ok
-        parameters.getRequired("window.granularity");
+            // ensure granularity is ok
+            parameters.getRequired("window.granularity");
 
-        // kafka
-        String kafkaBrokers = parameters.getRequired("kafka.brokers");
-        String kafkaInput = parameters.getRequired("kafka.augmentation");
+            // flink
+            long checkpointInterval = parameters.getLong("flink.checkpoints.interval", DEFAULT_CHECKPOINT_INTERVAL);
+            boolean externalizedCheckpoints = parameters.getBoolean("flink.checkpoints.externalized", false);
 
-        // DataStream from Kafka
-        Properties prop = new Properties();
-        prop.put("group.id", KAFKA_CONSUMER_GROUP);
-        prop.put("bootstrap.servers", kafkaBrokers);
-        prop.put("value.serializer", StringSerializer.class.getCanonicalName());
-        prop.put("auto.offset.reset", "earliest");
+            // kafka
+            String kafkaBrokers = parameters.getRequired("kafka.brokers");
+            String kafkaInput = parameters.getRequired("kafka.augmentation");
+            String consumerGroup = parameters.getRequired("kafka.consumer.group");
 
-        final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-        env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
+            // DataStream from Kafka
+            Properties prop = new Properties();
+            prop.put("group.id", consumerGroup);
+            prop.put("bootstrap.servers", kafkaBrokers);
+            prop.put("value.serializer", StringSerializer.class.getCanonicalName());
+            prop.put("auto.offset.reset", "earliest");
 
-        DataStream<String> inputStream = env.addSource( //
-                new FlinkKafkaConsumer09<>(kafkaInput, new SimpleStringSchema(), prop));
+            final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+            env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
 
-        inputStream
-                .flatMap(new StringToFloatMeasureFlatMapper())
-                .returns(Measure.class)
-                .rescale()
-                .keyBy("objectId")
-                .process(new WindowMapper())
-                .uid(UID_PREFIX + "WindowBasic01")
-                .addSink(new CassandraSink());
+            DataStream<String> inputStream = env.addSource( //
+                    new FlinkKafkaConsumer09<>(kafkaInput, new SimpleStringSchema(), prop));
+
+            inputStream
+                    .flatMap(new StringToFloatMeasureFlatMapper())
+                    .returns(Measure.class)
+                    .rescale()
+                    .keyBy("objectId")
+                    .process(new WindowMapper())
+                    .uid(UID_PREFIX + "WindowBasic01")
+                    .addSink(new CassandraSink());
 
 
-        env.setParallelism(1);
-        //env.getCheckpointConfig().setCheckpointInterval(parameters.getLong("checkpoint.interval", DEFAULT_CHECKPOINT_INTERVAL));
-        env.getConfig().setGlobalJobParameters(parameters.getConfiguration());
-        env.execute("BBData aggregation - custom windows");
+            // setup checkpoints
+            env.getCheckpointConfig().setCheckpointInterval(checkpointInterval);
+            if (externalizedCheckpoints) {
+                env.getCheckpointConfig().enableExternalizedCheckpoints(RETAIN_ON_CANCELLATION);
+            }
+            // pass configuration to the jobs
+            env.getConfig().setGlobalJobParameters(parameters.getConfiguration());
+
+            env.execute("BBDATA:aggregation (custom-windows)");
+        } catch (Exception e) {
+            LOGGER.error("{}", e);
+            throw e;
+        }
     }//end main
 
 }
