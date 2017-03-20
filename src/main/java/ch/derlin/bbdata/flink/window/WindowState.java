@@ -3,6 +3,7 @@ package ch.derlin.bbdata.flink.window;
 import ch.derlin.bbdata.flink.AggregationConfiguration;
 import ch.derlin.bbdata.flink.accumulators.IAccumulator;
 import ch.derlin.bbdata.flink.pojo.Measure;
+import ch.derlin.bbdata.flink.utils.DateUtil;
 import org.apache.flink.util.Collector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,7 +50,7 @@ public class WindowState {
             timeAdvance = lastCleanup = ts;
         } else if (ts < timeAdvance - allowedLateness) {
             if (!map.containsKey(key)) {
-                LOG.warn("LATE RECORD: time={}, '{}'", timeAdvance, measure);
+                LOG.warn("LATE RECORD: time={}, '{}'", DateUtil.dateToString(timeAdvance), measure);
                 // throw a new record only if the window is not still in cache
                 collector.collect(AggregationConfiguration.getLateAccumulatorFor(measure, key, windowSizeMillis));
                 return;

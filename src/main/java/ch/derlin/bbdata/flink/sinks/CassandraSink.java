@@ -67,9 +67,8 @@ public class CassandraSink extends RichSinkFunction<IAccumulator> {
             AggregationRecord oldRecord = mapper.get(record.minutes, record.objectId, record.date, record.timestamp);
             if (oldRecord != null) {
                 if (iAccumulator instanceof LateRecordAccumulator) {
-                    LOGGER.info("updating record : record={} | acc={}", oldRecord, iAccumulator);
+                    LOGGER.info("UPDATE => record={} | acc={}", oldRecord, iAccumulator);
                     oldRecord.addOne(((LateRecordAccumulator) iAccumulator).measure);
-                    LOGGER.info("updating record : new_record={}", oldRecord);
                     mapper.save(oldRecord);
                 } else {
                     if (oldRecord.count < record.count) {
