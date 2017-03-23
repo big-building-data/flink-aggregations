@@ -55,7 +55,11 @@ public class Main {
             LOGGER.info("properties: {}", parameters.toMap());
 
             // ensure granularity is ok
-            parameters.getRequired("window.granularity");
+            int granularity = parameters.getInt("window.granularity", -1);
+            if(granularity <= 0){
+                System.err.println("Incorrect property window.granularity...");
+                System.exit(1);
+            }
 
             // flink
             long checkpointInterval = parameters.getLong("flink.checkpoints.interval", DEFAULT_CHECKPOINT_INTERVAL);
@@ -97,7 +101,7 @@ public class Main {
             // pass configuration to the jobs
             env.getConfig().setGlobalJobParameters(parameters.getConfiguration());
 
-            env.execute("BBDATA:aggregation (custom-windows)");
+            env.execute(String.format("bbdata-aggregation (granularity=%d)", granularity));
         } catch (Exception e) {
             LOGGER.error("{}", e);
             throw e;
