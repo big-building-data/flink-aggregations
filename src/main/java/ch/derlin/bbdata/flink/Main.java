@@ -7,6 +7,7 @@ import ch.derlin.bbdata.flink.pojo.Measure;
 import ch.derlin.bbdata.flink.sinks.CassandraSink;
 import ch.derlin.bbdata.flink.window.WindowMapper;
 import org.apache.flink.api.java.utils.ParameterTool;
+import org.apache.flink.streaming.api.CheckpointingMode;
 import org.apache.flink.streaming.api.TimeCharacteristic;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -94,7 +95,7 @@ public class Main {
 
 
             // setup checkpoints
-            env.getCheckpointConfig().setCheckpointInterval(checkpointInterval);
+            env.enableCheckpointing(checkpointInterval, CheckpointingMode.EXACTLY_ONCE);
             if (externalizedCheckpoints) {
                 env.getCheckpointConfig().enableExternalizedCheckpoints(RETAIN_ON_CANCELLATION);
             }

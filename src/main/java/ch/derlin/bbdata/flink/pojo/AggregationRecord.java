@@ -77,6 +77,29 @@ public class AggregationRecord {
 
     // ----------------------------------------------------
 
+    public void addOne(AggregationRecord r) {
+        assert r.count == 1;
+        if (this.objectId != r.objectId) {
+            throw new RuntimeException(String.format("trying to merge different aggregation records: %s | %s", this, r));
+        }
+
+        this.count += 1;
+        this.sum += r.lastMeasure;
+        this.min = Math.min(this.min, r.lastMeasure);
+        this.max = Math.max(this.max, r.lastMeasure);
+        if (this.lastMeasureTimestamp < r.lastMeasureTimestamp) {
+            this.lastMeasureTimestamp = r.lastMeasureTimestamp;
+            this.lastMeasure = r.lastMeasure;
+        }
+
+        if (!isNaN(k)) {
+            kSum += r.lastMeasure - k;
+            kSumSquared += (r.lastMeasure - k) * (r.lastMeasure - k);
+            updateStdDev();
+        }
+        updateMean();
+    }
+
     public void addOne(Measure m) {
         if (this.objectId != m.objectId) {
             throw new RuntimeException(String.format("trying to merge different aggregation records: %s | %s", this, m));

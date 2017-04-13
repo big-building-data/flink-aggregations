@@ -62,13 +62,13 @@ public class CassandraSink extends RichSinkFunction<IAccumulator> {
     public void invoke(IAccumulator iAccumulator) throws Exception {
         // TODO concurrency ??
         if (iAccumulator instanceof AggregationRecord) {
-            AggregationRecord record = (AggregationRecord) iAccumulator;
+            AggregationRecord record = iAccumulator.getRecord();
 
             AggregationRecord oldRecord = mapper.get(record.minutes, record.objectId, record.date, record.timestamp);
             if (oldRecord != null) {
                 if (iAccumulator instanceof LateRecordAccumulator) {
                     LOGGER.info("UPDATE => record={} | acc={}", oldRecord, iAccumulator);
-                    oldRecord.addOne(((LateRecordAccumulator) iAccumulator).measure);
+                    oldRecord.addOne(record);
                     mapper.save(oldRecord);
                 } else {
                     if (oldRecord.count < record.count) {
@@ -78,10 +78,14 @@ public class CassandraSink extends RichSinkFunction<IAccumulator> {
                         LOGGER.warn("OVERRIDE => skipping: old={} | new={}", oldRecord, record);
                     }
                 }
-            }else{
+            } else {
+                if (iAccumulator instanceof LateRecordAccumulator) {
+                    // first time we see this, so we need to un-NaN the k, k_sum etc. fields
+                    LOGGER.info("FIRST as late => record={}", record);
+                }
                 mapper.save(record);
             }
-            
+
         } else {
             LOGGER.error("Got something else than an aggregation record: {} -- {} ", iAccumulator.getClass(), iAccumulator);
         }

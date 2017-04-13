@@ -8,15 +8,14 @@ import ch.derlin.bbdata.flink.pojo.Measure;
  *
  * @author Lucy Linder <lucy.derlin@gmail.com>
  */
-public class LateRecordAccumulator extends AggregationRecord implements IAccumulator {
+public class LateRecordAccumulator implements IAccumulator {
 
-    public Measure measure;
     public String dateClusteringKey;
+    public AggregationRecord record;
 
-    public LateRecordAccumulator(Measure measure, String dateClusteringKey) {
-        this.measure = measure;
+    public LateRecordAccumulator(AggregationRecord r, String dateClusteringKey) {
         this.dateClusteringKey = dateClusteringKey;
-        this.count = 1;
+        this.record = r;
     }
 
     @Override
@@ -28,5 +27,10 @@ public class LateRecordAccumulator extends AggregationRecord implements IAccumul
     @Override
     public void finalise() {
 
+    }
+
+    @Override
+    public AggregationRecord getRecord() {
+        return record;
     }
 }

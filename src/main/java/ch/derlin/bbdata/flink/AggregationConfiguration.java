@@ -28,12 +28,11 @@ public class AggregationConfiguration {
 
     public static IAccumulator getLateAccumulatorFor(Measure m, long windowStart, long windowSizeMillis) {
         assert isAggregationTarget(m);
-        LateRecordAccumulator acc = new LateRecordAccumulator(m, getDateClusteringKeyFor(windowStart, windowSizeMillis));
-        acc.objectId = m.objectId;
-        acc.minutes = toMinutes(windowSizeMillis);
-        acc.timestamp = new Date(windowStart);
-        acc.date = getDateClusteringKeyFor(windowStart, windowSizeMillis);
-        return acc;
+        // create an accumulator and fold once to account for the single measure m
+        IAccumulator acc = getAccumulatorFor(m, windowStart, windowSizeMillis);
+        acc.fold(m);
+        // then, wrap the accumulator in a lateRecord
+        return new LateRecordAccumulator(acc.getRecord(), getDateClusteringKeyFor(windowStart, windowSizeMillis));
     }
 
     public static IAccumulator getAccumulatorFor(Measure m, long windowStart, long windowSizeMillis) {

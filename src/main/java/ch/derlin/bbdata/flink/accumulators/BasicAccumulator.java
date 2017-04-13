@@ -34,6 +34,11 @@ public class BasicAccumulator extends AggregationRecord implements IAccumulator 
        updateMean();
     }
 
+    @Override
+    public AggregationRecord getRecord() {
+        return this;
+    }
+
 
     @Override
     public String toString() {

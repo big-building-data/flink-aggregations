@@ -1,5 +1,6 @@
 package ch.derlin.bbdata.flink.accumulators;
 
+import ch.derlin.bbdata.flink.pojo.AggregationRecord;
 import ch.derlin.bbdata.flink.pojo.Measure;
 
 /**
@@ -13,5 +14,7 @@ public interface IAccumulator {
     void fold(Measure m);
 
     void finalise();
+
+    AggregationRecord getRecord();
 }
 
