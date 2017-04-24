@@ -11,7 +11,7 @@ import org.apache.flink.streaming.api.CheckpointingMode;
 import org.apache.flink.streaming.api.TimeCharacteristic;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumer09;
+import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumer010;
 import org.apache.flink.streaming.util.serialization.SimpleStringSchema;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.slf4j.Logger;
@@ -82,7 +82,7 @@ public class Main {
             env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
 
             DataStream<String> inputStream = env.addSource( //
-                    new FlinkKafkaConsumer09<>(kafkaInput, new SimpleStringSchema(), prop));
+                    new FlinkKafkaConsumer010<>(kafkaInput, new SimpleStringSchema(), prop));
 
             inputStream
                     .flatMap(new StringToFloatMeasureFlatMapper())
