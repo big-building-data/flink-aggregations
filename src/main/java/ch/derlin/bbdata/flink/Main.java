@@ -82,7 +82,7 @@ public class Main {
             env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
 
             DataStream<String> inputStream = env.addSource( //
-                    new FlinkKafkaConsumer010<>(kafkaInput, new SimpleStringSchema(), prop));
+                    new FlinkKafkaConsumer010<>(kafkaInput, new SimpleStringSchema(), prop), "KafkaSource");
 
             inputStream
                     .flatMap(new StringToFloatMeasureFlatMapper())
@@ -91,7 +91,7 @@ public class Main {
                     .keyBy("objectId")
                     .process(new WindowMapper())
                     .uid(UID_PREFIX + "WindowBasic01")
-                    .addSink(new CassandraSink());
+                    .addSink(new CassandraSink()).name("CassandraSink");
 
 
             // setup checkpoints
