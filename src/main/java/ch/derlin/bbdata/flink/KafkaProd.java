@@ -16,6 +16,7 @@ import java.util.Properties;
 import java.util.concurrent.ExecutionException;
 
 /**
+ * This is just for testing: it will produce measure via a kafka producer.
  * date: 19/12/16
  *
  * @author "Lucy Linder"

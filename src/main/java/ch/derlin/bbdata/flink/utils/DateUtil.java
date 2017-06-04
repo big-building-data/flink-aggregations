@@ -5,6 +5,7 @@ import org.joda.time.DateTime;
 import java.util.Date;
 
 /**
+ * Some basic utilities to log dates.
  * date: 01/01/17
  *
  * @author "Lucy Linder"

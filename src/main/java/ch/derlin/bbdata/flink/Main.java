@@ -24,6 +24,12 @@ import java.util.Properties;
 import static org.apache.flink.streaming.api.environment.CheckpointConfig.ExternalizedCheckpointCleanup.RETAIN_ON_CANCELLATION;
 
 /**
+ * This is the Flink application for BBData - window aggregation.
+ *
+ * The actual window size and other parameters are declaring in a properties file.
+ * Usage:
+ * <code>flink run flink-aggregation-{version}-full.jar {path to the properties file}</code>
+ *
  * date: 19/12/16
  *
  * @author "Lucy Linder"

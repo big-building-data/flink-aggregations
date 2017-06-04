@@ -7,13 +7,14 @@ import com.datastax.driver.mapping.annotations.PartitionKey;
 import com.datastax.driver.mapping.annotations.Table;
 
 import java.util.Date;
-import java.util.Objects;
 
 import static java.lang.Float.NaN;
 import static java.lang.Float.isNaN;
 
 
 /**
+ * An AggregationRecord is a POJO mapping the table bbdata2.aggregation to java objects.
+ * It also implements some methods to merge two windows or to update a window with a late record.
  * date: 10.03.17
  *
  * @author Lucy Linder <lucy.derlin@gmail.com>
@@ -77,6 +78,10 @@ public class AggregationRecord {
 
     // ----------------------------------------------------
 
+    /**
+     * add one late record to the current window
+     * @param r the late record to add
+     */
     public void addOne(AggregationRecord r) {
         assert r.count == 1;
         if (this.objectId != r.objectId) {
@@ -100,6 +105,11 @@ public class AggregationRecord {
         updateMean();
     }
 
+    /**
+     * add one measure to the current window.
+     * @deprecated use {@link #addOne(AggregationRecord)} instead
+     * @param m the measure to add
+     */
     public void addOne(Measure m) {
         if (this.objectId != m.objectId) {
             throw new RuntimeException(String.format("trying to merge different aggregation records: %s | %s", this, m));
@@ -124,6 +134,10 @@ public class AggregationRecord {
 
     // ----------------------------------------------------
 
+    /**
+     * compute the final standard deviation based on k and kSumSquared.
+     * This should be called right before closing the window.
+     */
     public void updateStdDev() {
 
         assert k != NaN && kSumSquared != NaN && count > 0;
@@ -133,6 +147,11 @@ public class AggregationRecord {
         std = (float) Math.sqrt(var);
     }
 
+    /**
+     * compute the mean based on count and sum.
+     * This should be called right before closing the window or after the count/sum has been modified (in case of a
+     * late record for instance).
+     */
     public void updateMean() {
         assert count != 0;
         mean = sum / count;
@@ -147,44 +166,6 @@ public class AggregationRecord {
                 ", timestamp=" + dtf.format(timestamp) +
                 ", count=" + count +
                 '}';
-    }
-
-
-    // ----------------------------------------------------
-
-    private AggregationRecord mergeTest(AggregationRecord other) {
-        if (this.objectId != other.objectId ||
-                !Objects.equals(this.date, other.date) ||
-                !this.timestamp.equals(other.timestamp)) {
-            throw new RuntimeException(String.format("trying to merge different aggregation records: %s | %s", this, other));
-        }
-        //assert (this.count > 1 && other.count > 1);
-
-        float newMean = (this.count * this.mean + other.count * other.mean) / (this.count + other.count);
-        if (!isNaN(k)) {
-            this.std = this.count * ((this.std * this.std) + (this.mean - newMean)) +
-                    other.count * ((other.std * other.std) + (other.mean - newMean));
-        }
-        this.mean = newMean;
-
-        mergeBasicFields(other);
-        return this;
-    }
-
-    private void merge2(AggregationRecord other) {
-        assert (other.count > 1);
-
-    }
-
-    private void mergeBasicFields(AggregationRecord other) {
-        this.count += other.count;
-        this.sum += other.sum;
-        this.min = Math.min(this.min, other.min);
-        this.max = Math.max(this.max, other.max);
-        if (this.lastMeasureTimestamp < other.lastMeasureTimestamp) {
-            this.lastMeasureTimestamp = other.lastMeasureTimestamp;
-            this.lastMeasure = other.lastMeasure;
-        }
     }
 
 }

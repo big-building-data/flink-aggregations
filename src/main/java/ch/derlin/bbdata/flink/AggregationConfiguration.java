@@ -12,6 +12,7 @@ import java.util.Date;
 import java.util.List;
 
 /**
+ * This class 
  * date: 10.03.17
  *
  * @author Lucy Linder <lucy.derlin@gmail.com>

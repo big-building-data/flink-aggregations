@@ -23,10 +23,12 @@ public class CassandraSink extends RichSinkFunction<IAccumulator> {
 
     protected static final Logger LOGGER = LoggerFactory.getLogger(CassandraSink.class);
 
+    // transient properties are never serialized. Each node will recreate them
+    // in the open/close methods of the RichSinkFunction interface
     protected transient Cluster cluster;
     protected transient Session session;
     protected transient Mapper<AggregationRecord> mapper;
-    protected long windowSizeMillis;
+    protected transient long windowSizeMillis;
 
 
     @Override
@@ -43,12 +45,17 @@ public class CassandraSink extends RichSinkFunction<IAccumulator> {
                 builder.addContactPoint(address.trim());
             }
 
+            // the keyspace and tables are declared in the AggregationRecord class
+            // so here, just create a connection
             cluster = builder.build();
             session = cluster.connect();
 
+            // the mapper will do the mapping between cassandra records and AggregationRecord objects
             MappingManager manager = new MappingManager(session);
             mapper = manager.mapper(AggregationRecord.class);
 
+            // the window size is used as a primary key in the aggregation table.
+            // we will add it in invoke()
             int windowSizeMinutes = config.getInteger("window.granularity", 15);
             windowSizeMillis = Time.minutes(windowSizeMinutes).toMilliseconds();
 
@@ -61,33 +68,36 @@ public class CassandraSink extends RichSinkFunction<IAccumulator> {
     @Override
     public void invoke(IAccumulator iAccumulator) throws Exception {
         // TODO concurrency ??
-        if (iAccumulator instanceof AggregationRecord) {
-            AggregationRecord record = iAccumulator.getRecord();
+        // get the record
+        AggregationRecord record = iAccumulator.getRecord();
+        // check if a record already exists in cassandra
+        AggregationRecord oldRecord = mapper.get(record.minutes, record.objectId, record.date, record.timestamp);
 
-            AggregationRecord oldRecord = mapper.get(record.minutes, record.objectId, record.date, record.timestamp);
-            if (oldRecord != null) {
-                if (iAccumulator instanceof LateRecordAccumulator) {
-                    LOGGER.info("UPDATE => record={} | acc={}", oldRecord, iAccumulator);
-                    oldRecord.addOne(record);
-                    mapper.save(oldRecord);
-                } else {
-                    if (oldRecord.count < record.count) {
-                        LOGGER.warn("OVERRIDE => overriding: old={} | new={}", oldRecord, record);
-                        mapper.save(record);
-                    } else {
-                        LOGGER.warn("OVERRIDE => skipping: old={} | new={}", oldRecord, record);
-                    }
-                }
+        if (oldRecord != null) {
+            // there is already a record for this window in cassandra
+            if (iAccumulator instanceof LateRecordAccumulator) {
+                // this is a late record, i.e. a single entry => update the stats in cassandra
+                LOGGER.info("UPDATE => record={} | acc={}", oldRecord, iAccumulator);
+                oldRecord.addOne(record);
+                mapper.save(oldRecord);
             } else {
-                if (iAccumulator instanceof LateRecordAccumulator) {
-                    // first time we see this, so we need to un-NaN the k, k_sum etc. fields
-                    LOGGER.info("FIRST as late => record={}", record);
+                // this might be a duplicate, or a partial record due to a restart of the program
+                // without a saved state => replace the record already in cassandra only if this
+                // record has more measures
+                if (oldRecord.count < record.count) {
+                    LOGGER.warn("OVERRIDE => overriding: old={} | new={}", oldRecord, record);
+                    mapper.save(record);
+                } else {
+                    LOGGER.warn("OVERRIDE => skipping: old={} | new={}", oldRecord, record);
                 }
-                mapper.save(record);
             }
-
         } else {
-            LOGGER.error("Got something else than an aggregation record: {} -- {} ", iAccumulator.getClass(), iAccumulator);
+            // simply save the new record
+            if (iAccumulator instanceof LateRecordAccumulator) {
+                // first time we see this, so we need to un-NaN the k, k_sum etc. fields
+                LOGGER.info("FIRST as late => record={}", record);
+            }
+            mapper.save(record);
         }
     }
 

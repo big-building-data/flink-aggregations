@@ -6,6 +6,8 @@ import ch.derlin.bbdata.flink.pojo.Measure;
 import static java.lang.Float.isNaN;
 
 /**
+ * The advanced accumulator will also compute the standard deviation.
+ * It is used for objects whose unit is listed in {@link ch.derlin.bbdata.flink.AggregationConfiguration#ADVANCED_AGGR_UNITS}
  * date: 21/12/16
  *
  * @author "Lucy Linder"

@@ -8,12 +8,25 @@ import ch.derlin.bbdata.flink.utils.DateUtil;
 import static java.lang.Float.isNaN;
 
 /**
+ * The basic accumulator will compute:
+ * <ul>
+ * <li>sum</li>
+ * <li>count</li>
+ * <li>mean</li>
+ * <li>min</li>
+ * <li>max</li>
+ * </ul>
+ * <p>
+ * It is used for objects with a unit matching ({@link ch.derlin.bbdata.flink.AggregationConfiguration#BASIC_AGGR_UNITS}).
+ * <p>
  * date: 10.03.17
  *
  * @author Lucy Linder <lucy.derlin@gmail.com>
  */
 public class BasicAccumulator extends AggregationRecord implements IAccumulator {
-
+    /**
+     * The start time of the window, in milliseconds since epoch.
+     */
     public long windowTime;
 
     @Override
@@ -31,7 +44,8 @@ public class BasicAccumulator extends AggregationRecord implements IAccumulator 
 
     @Override
     public void finalise() {
-       updateMean();
+        // compute the mean based on sum and count
+        updateMean();
     }
 
     @Override

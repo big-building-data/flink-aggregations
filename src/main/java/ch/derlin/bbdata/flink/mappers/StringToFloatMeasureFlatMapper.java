@@ -12,6 +12,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * This mapper converts a measure in json format to a {@link Measure} object and filter measures based on their unit.
+ *
+ *
+ * This means that it will drop any measure: a) whose unit is not of interest
+ * (see {@link AggregationConfiguration#isAggregationTarget(Measure)} or b) whose value is not parseable into a float.
  * date: 19/12/16
  *
  * @author "Lucy Linder"
@@ -36,6 +41,8 @@ public class StringToFloatMeasureFlatMapper extends RichFlatMapFunction<String, 
 
     @Override
     public void open(Configuration parameters) throws Exception {
+        // serializeSpecialFloatingPointValues makes gson handle NaNs, Infinity and special values
+        // see https://google.github.io/gson/apidocs/com/google/gson/GsonBuilder.html#serializeSpecialFloatingPointValues--
         gson = GsonProvider.getBuilder().serializeSpecialFloatingPointValues().create();
     }
 }

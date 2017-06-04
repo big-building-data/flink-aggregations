@@ -21,16 +21,20 @@
 #   1024M for the jobmanager memory (-jm), 2048M for the taskmanager memory (-tm)
 YARN_SESSION_ARGUMENTS="-d -n 1 -s 4 -jm 1024 -tm 2048"
 # TODO: update the path to the jar and properties file if needed
-# Currently in /home/daplabadm/flink-agg
-FLINK_RUN_ARGUMENTS="-d ~/flink-agg/flink-aggregations-*-full.jar ~/flink-agg/local.properties"
+FLINK_RUN_ARGUMENTS="-d"
+
+CURRENT_DIR="$(dirname "$(readlink -f "$0/..")")"
+
+# job jars
+FLINK_BASIC="$CURRENT_DIR/flink-basic-processing/target/flink-*.jar $CURRENT_DIR/properties/flink-basic.properties"
+
+JOB_AUGMENT="-c ch.derlin.bbdata.augmentation.Augmentation $FLINK_BASIC"
+JOB_CASSANDRA="-c ch.derlin.bbdata.cassandra.CassandraSaver $FLINK_BASIC"
+JOB_AGGR="$CURRENT_DIR/flink-aggregations/target/flink-aggregations-*-full.jar $CURRENT_DIR/properties/flink-aggregations.properties"
 
 
-CURRENT_DIR="$(dirname "$(readlink -f "$0")")"
-
-# use flink 1.2
-export PATH=/home/daplabadm/flink-1.2.0/bin:$PATH
 # flink needs access to the hadoop configuration
-export HADOOP_CONF_DIR=/etc/hadoop/conf
+export HADOOP_CONF_DIR=${HADOOP_CONF_DIR:-/etc/hadoop/conf}
 # use a custom log4j.properties file (currently in /home/daplabadm/flink-agg)
 export FLINK_CONF_DIR=$CURRENT_DIR/conf
 
@@ -44,6 +48,7 @@ function get_session_id(){
 # if no session is running, launch one and print its application_id and web interface.
 function start_yarn_session(){
     echo "checking for a running yarn session..."
+
     session_id=$(get_session_id)
     if [ -z "$session_id" ]; then  
         # launch new yarn session
@@ -63,34 +68,57 @@ function start_yarn_session(){
 # this function assumes a yarn-session is already running.
 # argument: savepoint-directory to resume from (optional)
 function launch_job(){
-    args="$(eval echo $FLINK_RUN_ARGUMENTS)"  # expand all variables such as "~" and "*"
-    if [ -n "$1" ]; then
-        echo "resuming from savepoint $1..."
-        out="$(flink run -s "$1" $args 2>&1)"
+    [ -z "$1" ] && echo "missing argument to launch_job. Usage: launch_job <jar> [<savepoint>]" && exit 1
+
+    args="$(eval echo $FLINK_RUN_ARGUMENTS $1)" # expand all variables such as "~" and "*"
+
+    if [ -n "$2" ]; then
+        echo "resuming from savepoint $2..."
+        out="$(flink run -s "$2" $args 2>&1)"
+        #echo "flink run -s "$2" $args 2>&1"
     else
         echo "launching job..."
         out="$(flink run $args 2>&1)"
+        #echo "flink run $args 2>&1"
     fi
     [ $? -ne 0 ] && echo -e "failed to launch flink job:\n$out" && exit 1
     echo "flink job started"
     echo "   ApplicationId: $(echo $out | grep -o "JobID [^ ]*")"
 }
 
-
 case "$1" in
     start-all) 
         start_yarn_session
-        launch_job "$2"
+        launch_job "$JOB_AUGMENT" "$2"
+        launch_job "$JOB_CASSANDRA" "$2"
+        launch_job "$JOB_AGGR" "$2"
         ;;
-    start-job)
-        launch_job "$2"
+
+    start)
+        case "$2" in 
+            s|session)
+                start_yarn_session
+                ;;
+            au|aug*)
+                launch_job "$JOB_AUGMENT" "$3"
+                ;;
+            c|cass*)
+                launch_job "$JOB_CASSANDRA" "$3"
+                ;;
+            ag|aggr*)
+                launch_job "$JOB_AGGR" "$3"
+                ;;
+            *) 
+                echo "wrong parameter '$3'"
+                echo "Usage: start session|augmentation|cassandra|aggregation"
+                exit 1
+        esac
         ;;
-    start-session)
-        start_yarn_session
-        ;;
+
     session-id)
         get_session_id 
         ;;
     *) 
         echo "usage: start-job|start-session|start-all|session-id"
 esac
+
