@@ -4,7 +4,7 @@ This repository implements the aggregations processor for BBData measures. It im
 
 ## Quick start
 
-### requirements
+### Requirements
 
 This application requires Flink 1.2+. It is intended to run in a BBData environment. The source kafka topic should
 contain augmented measures and the cassandra database should have a table `bbdata2.aggregations` with the following
@@ -33,7 +33,7 @@ structure (see `aggregations.cql`):
     ) WITH CLUSTERING ORDER BY (timestamp DESC);
 
 
-### build and configuration
+### Build and configuration
 
 clone this repository and create the jar:
 
@@ -50,7 +50,7 @@ modify the values accordingly. If you intend to run this application with multip
 different properties files for each, changing the `window.granularity` and the `kafka.consumer.group` properties.
 
 
-### running the application (yarn)
+### Running the application (yarn)
 
 To run the application, you have two options:
 
@@ -88,7 +88,32 @@ other source's timelines.
 
 With the current Flink windowing implementation, there is only one time advance, shared by all the streams. It is possible
 to configure an "allowed lateness", but this is not enough to deal with the case of a source failure. We really need
- each source to have its own independent time advance.
+ each source to have its own independent time advance !
+
+ Another possibility would be to use Kafka-streams instead of Flink.
+
+ Kafka-streams does not use watermarks to keep track of time (and detect when a window should be closed). Instead, it
+ stores aggregation results in an ever-updating `KTable`. A `KTable` is table represented as a stream of row updates;
+ in other words, a changelog stream. Kafka will fire a new event every time a window is updated.
+
+ The each-element triggering can be a problem if the window function is expensive to compute and
+ doesn’t have a straightforward "accumulative" nature. In our case, we need to save the aggregation results, so this
+ means we will do a database update on each new record, which is rather heavy...
+
+Kafka-streams is aware of this limitation and under [KIP-63](https://cwiki.apache.org/confluence/display/KAFKA/KIP-63%3A+Unify+store+and+downstream+caching+in+streams),
+window output will be cached hence triggering not on each element, but only when the cache is full.
+This should improve performance of window processing. But the cache might grow quickly, so we might be able to limit
+database update to every five minutes or so, which is still often for windows of one hour or more.
+
+# How we proceed in our custom implementation
+
+This repository uses Flink states and rich map functions to implement its own sliding window mecanism.
+
+
+
+
+
+
 
 
 
