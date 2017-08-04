@@ -8,7 +8,7 @@ import org.apache.flink.api.common.state.ValueStateDescriptor;
 import org.apache.flink.api.common.time.Time;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.configuration.Configuration;
-import org.apache.flink.streaming.api.functions.RichProcessFunction;
+import org.apache.flink.streaming.api.functions.ProcessFunction;
 import org.apache.flink.util.Collector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,7 +22,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author Lucy Linder <lucy.derlin@gmail.com>
  */
-public class WindowMapper extends RichProcessFunction<Measure, IAccumulator> {
+public class WindowMapper extends ProcessFunction<Measure, IAccumulator> {
 
     private Logger LOG = LoggerFactory.getLogger( WindowMapper.class );
 

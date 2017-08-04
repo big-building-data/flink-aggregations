@@ -6,11 +6,11 @@
 
     <groupId>ch.derlin.bbdata.flink</groupId>
     <artifactId>flink-aggregations</artifactId>
-    <version>0.0.1</version>
+    <version>0.0.2</version>
 
     <properties>
         <jdk.version>1.8</jdk.version>
-        <flink.version>1.2.0</flink.version>
+        <flink.version>1.3.0</flink.version>
         <mysql.version>6.0.2</mysql.version>
         <slf4j.version>1.7.21</slf4j.version>
         <bbdata.commons.version>0.0.2</bbdata.commons.version>
@@ -43,22 +43,22 @@
         </dependency>
         <dependency>
             <groupId>org.apache.flink</groupId>
-            <artifactId>flink-streaming-java_2.10</artifactId>
+            <artifactId>flink-streaming-java_2.11</artifactId>
             <version>${flink.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.flink</groupId>
-            <artifactId>flink-connector-kafka-0.10_2.10</artifactId>
+            <artifactId>flink-connector-kafka-0.10_2.11</artifactId>
             <version>${flink.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.flink</groupId>
-            <artifactId>flink-clients_2.10</artifactId>
+            <artifactId>flink-clients_2.11</artifactId>
             <version>${flink.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.flink</groupId>
-            <artifactId>flink-connector-wikiedits_2.10</artifactId>
+            <artifactId>flink-connector-wikiedits_2.11</artifactId>
             <version>${flink.version}</version>
         </dependency>
 
