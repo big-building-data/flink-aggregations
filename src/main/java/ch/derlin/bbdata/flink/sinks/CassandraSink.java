@@ -77,7 +77,7 @@ public class CassandraSink extends RichSinkFunction<IAccumulator> {
             // there is already a record for this window in cassandra
             if (iAccumulator instanceof LateRecordAccumulator) {
                 // this is a late record, i.e. a single entry => update the stats in cassandra
-                LOGGER.info("UPDATE => record={} | acc={}", oldRecord, iAccumulator);
+                LOGGER.debug("UPDATE => record={} | acc={}", oldRecord, iAccumulator);
                 oldRecord.addOne(record);
                 mapper.save(oldRecord);
             } else {
@@ -85,17 +85,17 @@ public class CassandraSink extends RichSinkFunction<IAccumulator> {
                 // without a saved state => replace the record already in cassandra only if this
                 // record has more measures
                 if (oldRecord.count < record.count) {
-                    LOGGER.warn("OVERRIDE => overriding: old={} | new={}", oldRecord, record);
+                    LOGGER.debug("OVERRIDE => overriding: old={} | new={}", oldRecord, record);
                     mapper.save(record);
                 } else {
-                    LOGGER.warn("OVERRIDE => skipping: old={} | new={}", oldRecord, record);
+                    LOGGER.debug("OVERRIDE => skipping: old={} | new={}", oldRecord, record);
                 }
             }
         } else {
             // simply save the new record
             if (iAccumulator instanceof LateRecordAccumulator) {
                 // first time we see this, so we need to un-NaN the k, k_sum etc. fields
-                LOGGER.info("FIRST as late => record={}", record);
+                LOGGER.debug("FIRST as late => record={}", record);
             }
             mapper.save(record);
         }

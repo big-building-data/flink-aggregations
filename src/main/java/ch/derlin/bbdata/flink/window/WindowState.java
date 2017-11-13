@@ -95,12 +95,12 @@ public class WindowState {
             if (!map.containsKey(key)) {
                 // the window it belongs has already been closed,
                 // immediately forward a LateRecordAccumulator
-                LOG.warn("LATE RECORD: time={}, '{}'", DateUtil.dateToString(timeAdvance), measure);
+                LOG.debug("LATE RECORD: time={}, '{}'", DateUtil.dateToString(timeAdvance), measure);
                 collector.collect(AggregationConfiguration.getLateAccumulatorFor(measure, key, windowSizeMillis));
                 return; // nothing left to do
             } else {
                 // the window it belongs to is still in memory, so we can process it normally
-                LOG.trace("LATE RECORD: (window in scope) '{}'", timeAdvance, measure);
+                LOG.debug("LATE RECORD: (window in scope) '{}'", timeAdvance, measure);
             }
         } else {
             // the measure is "on-time", update the timeAdvance if necessary
