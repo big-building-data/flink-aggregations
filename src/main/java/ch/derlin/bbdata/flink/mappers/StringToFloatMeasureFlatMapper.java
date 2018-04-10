@@ -1,6 +1,7 @@
 package ch.derlin.bbdata.flink.mappers;
 
 import ch.derlin.bbdata.commons.GsonProvider;
+import ch.derlin.bbdata.commons.dateutils.TimeZoneUtils;
 import ch.derlin.bbdata.flink.AggregationConfiguration;
 import ch.derlin.bbdata.flink.Main;
 import ch.derlin.bbdata.flink.pojo.Measure;
@@ -43,6 +44,7 @@ public class StringToFloatMeasureFlatMapper extends RichFlatMapFunction<String, 
     public void open(Configuration parameters) throws Exception {
         // serializeSpecialFloatingPointValues makes gson handle NaNs, Infinity and special values
         // see https://google.github.io/gson/apidocs/com/google/gson/GsonBuilder.html#serializeSpecialFloatingPointValues--
+        TimeZoneUtils.setDefaultToUTC();
         gson = GsonProvider.getBuilder().serializeSpecialFloatingPointValues().create();
     }
 }

@@ -1,5 +1,6 @@
 package ch.derlin.bbdata.flink.sinks;
 
+import ch.derlin.bbdata.commons.dateutils.TimeZoneUtils;
 import ch.derlin.bbdata.flink.accumulators.IAccumulator;
 import ch.derlin.bbdata.flink.accumulators.LateRecordAccumulator;
 import ch.derlin.bbdata.flink.pojo.AggregationRecord;
@@ -34,6 +35,8 @@ public class CassandraSink extends RichSinkFunction<IAccumulator> {
     @Override
     public void open(Configuration parameters) throws Exception {
         super.open(parameters);
+
+        TimeZoneUtils.setDefaultToUTC();
 
         try {
             Configuration config = (Configuration) getRuntimeContext().getExecutionConfig().getGlobalJobParameters();
