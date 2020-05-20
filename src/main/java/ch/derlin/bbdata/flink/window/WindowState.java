@@ -161,6 +161,7 @@ public class WindowState {
      */
     public void flush(Collector<IAccumulator> collector) {
         for (IAccumulator accumulator : map.values()) {
+            accumulator.finalise();
             collector.collect(accumulator);
             LOG.trace("cleanup window '{}'", accumulator);
         }
