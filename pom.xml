@@ -16,6 +16,8 @@
         <slf4j.version>1.7.21</slf4j.version>
         <bbdata.commons.version>0.0.2</bbdata.commons.version>
         <cassandra.version>3.1.0</cassandra.version>
+        <!--set provided below for the cluster, compile for local testing-->
+        <scope.type>provided</scope.type>
     </properties>
 
     <repositories>
@@ -41,25 +43,25 @@
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-java</artifactId>
             <version>${flink.version}</version>
-            <scope>provided</scope>
+            <scope>${scope.type}</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-streaming-java_2.11</artifactId>
             <version>${flink.version}</version>
-            <scope>provided</scope>
+            <scope>${scope.type}</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-clients_2.11</artifactId>
             <version>${flink.version}</version>
-            <scope>provided</scope>
+            <scope>${scope.type}</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-connector-wikiedits_2.11</artifactId>
             <version>${flink.version}</version>
-            <scope>provided</scope>
+            <scope>${scope.type}</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.flink</groupId>
