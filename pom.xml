@@ -20,24 +20,7 @@
         <scope.type>provided</scope.type>
     </properties>
 
-    <repositories>
-        <repository>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-            <id>bintray-derlin-maven</id>
-            <name>bintray</name>
-            <url>http://dl.bintray.com/derlin/maven</url>
-        </repository>
-    </repositories>
-
     <dependencies>
-        <!-- bbdata -->
-        <dependency>
-            <groupId>ch.derlin.bbdata</groupId>
-            <artifactId>bbdata-commons</artifactId>
-            <version>${bbdata.commons.version}</version>
-        </dependency>
         <!--flink-->
         <dependency>
             <groupId>org.apache.flink</groupId>

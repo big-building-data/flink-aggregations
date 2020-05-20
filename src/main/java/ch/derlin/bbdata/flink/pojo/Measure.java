@@ -1,5 +1,7 @@
 package ch.derlin.bbdata.flink.pojo;
 
+import ch.derlin.bbdata.flink.utils.DateUtil;
+
 import java.io.Serializable;
 import java.util.Date;
 
@@ -29,7 +31,7 @@ public class Measure implements Serializable{
     public String toString(){
         return "Measure{" +
                 "objectId=" + objectId +
-                ", timestamp=" + timestamp +
+                ", timestamp=" + DateUtil.dateToString(timestamp) +
                 ", value=" + value +
                 ", floatValue=" + floatValue +
                 '}';

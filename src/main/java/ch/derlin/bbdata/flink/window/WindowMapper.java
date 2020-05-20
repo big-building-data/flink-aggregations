@@ -1,8 +1,8 @@
 package ch.derlin.bbdata.flink.window;
 
-import ch.derlin.bbdata.commons.dateutils.TimeZoneUtils;
 import ch.derlin.bbdata.flink.accumulators.IAccumulator;
 import ch.derlin.bbdata.flink.pojo.Measure;
+import ch.derlin.bbdata.flink.utils.DateUtil;
 import org.apache.flink.api.common.state.ValueState;
 import org.apache.flink.api.common.state.ValueStateDescriptor;
 import org.apache.flink.api.common.time.Time;
@@ -58,7 +58,7 @@ public class WindowMapper extends ProcessFunction<Measure, IAccumulator> {
     @Override
     public void open(Configuration parameters) throws Exception {
         // ensure the JVM and JodaTime are configured for UTC dates
-        TimeZoneUtils.setDefaultToUTC();
+        DateUtil.setDefaultToUTC();
         // extract configuration properties from the context
         Configuration config = (Configuration) getRuntimeContext().getExecutionConfig().getGlobalJobParameters();
         int windownMinutes = config.getInteger("window.granularity", 15);

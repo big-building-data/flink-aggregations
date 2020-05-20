@@ -1,8 +1,8 @@
 package ch.derlin.bbdata.flink;
 
-import ch.derlin.bbdata.commons.GsonProvider;
 import ch.derlin.bbdata.flink.pojo.Measure;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
@@ -43,7 +43,7 @@ public class KafkaProd {
 
         Producer<String, String> producer = new KafkaProducer<>(props);
 
-        Gson gson = GsonProvider.getBuilder().serializeSpecialFloatingPointValues().create();
+        Gson gson = new GsonBuilder().serializeSpecialFloatingPointValues().create();
         DateTime dt = new DateTime().minusDays(1).plusMinutes(400);
 
         DateTime dt1 = new DateTime().minusDays(16);

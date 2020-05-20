@@ -1,10 +1,10 @@
 package ch.derlin.bbdata.flink;
 
 
-import ch.derlin.bbdata.commons.dateutils.TimeZoneUtils;
 import ch.derlin.bbdata.flink.mappers.StringToFloatMeasureFlatMapper;
 import ch.derlin.bbdata.flink.pojo.Measure;
 import ch.derlin.bbdata.flink.sinks.CassandraSink;
+import ch.derlin.bbdata.flink.utils.DateUtil;
 import ch.derlin.bbdata.flink.window.WindowMapper;
 import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.streaming.api.CheckpointingMode;
@@ -25,11 +25,11 @@ import static org.apache.flink.streaming.api.environment.CheckpointConfig.Extern
 
 /**
  * This is the Flink application for BBData - window aggregation.
- *
+ * <p>
  * The actual window size and other parameters are declaring in a properties file.
  * Usage:
  * <code>flink run flink-aggregation-{version}-full.jar {path to the properties file}</code>
- *
+ * <p>
  * date: 19/12/16
  *
  * @author "Lucy Linder"
@@ -52,7 +52,7 @@ public class Main {
         }
 
         try {
-            TimeZoneUtils.setDefaultToUTC();
+            DateUtil.setDefaultToUTC();
 
             // get path to configuration file
             Path configPath = Paths.get(args[0]);
@@ -63,7 +63,7 @@ public class Main {
 
             // ensure granularity is ok
             int granularity = parameters.getInt("window.granularity", -1);
-            if(granularity <= 0){
+            if (granularity <= 0) {
                 System.err.println("Incorrect property window.granularity...");
                 System.exit(1);
             }

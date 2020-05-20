@@ -1,6 +1,6 @@
 package ch.derlin.bbdata.flink.pojo;
 
-import ch.derlin.bbdata.commons.dateutils.DateTimeFormatUTC;
+import ch.derlin.bbdata.flink.utils.DateUtil;
 import com.datastax.driver.mapping.annotations.ClusteringColumn;
 import com.datastax.driver.mapping.annotations.Column;
 import com.datastax.driver.mapping.annotations.PartitionKey;
@@ -25,8 +25,6 @@ import static java.lang.Float.isNaN;
         caseSensitiveKeyspace = false,
         caseSensitiveTable = false)
 public class AggregationRecord {
-
-    private static transient DateTimeFormatUTC dtf = new DateTimeFormatUTC();
 
     @PartitionKey(0)
     @Column(name = "minutes")
@@ -162,8 +160,8 @@ public class AggregationRecord {
         return "AggregationRecord{" +
                 "minutes=" + minutes +
                 ", objectId=" + objectId +
-                ", date='" + date + '\'' +
-                ", timestamp=" + dtf.format(timestamp) +
+                ", date='" + DateUtil.dateToString(timestamp) +
+                ", timestamp=" + timestamp +
                 ", count=" + count +
                 '}';
     }

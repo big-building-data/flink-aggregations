@@ -1,9 +1,9 @@
 package ch.derlin.bbdata.flink.sinks;
 
-import ch.derlin.bbdata.commons.dateutils.TimeZoneUtils;
 import ch.derlin.bbdata.flink.accumulators.IAccumulator;
 import ch.derlin.bbdata.flink.accumulators.LateRecordAccumulator;
 import ch.derlin.bbdata.flink.pojo.AggregationRecord;
+import ch.derlin.bbdata.flink.utils.DateUtil;
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.policies.DefaultRetryPolicy;
@@ -36,7 +36,7 @@ public class CassandraSink extends RichSinkFunction<IAccumulator> {
     public void open(Configuration parameters) throws Exception {
         super.open(parameters);
 
-        TimeZoneUtils.setDefaultToUTC();
+        DateUtil.setDefaultToUTC();
 
         try {
             Configuration config = (Configuration) getRuntimeContext().getExecutionConfig().getGlobalJobParameters();
