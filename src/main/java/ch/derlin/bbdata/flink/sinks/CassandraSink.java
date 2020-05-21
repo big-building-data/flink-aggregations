@@ -10,6 +10,7 @@ import com.datastax.driver.core.policies.DefaultRetryPolicy;
 import com.datastax.driver.mapping.Mapper;
 import com.datastax.driver.mapping.MappingManager;
 import org.apache.flink.api.common.time.Time;
+import org.apache.flink.configuration.ConfigOption;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.functions.sink.RichSinkFunction;
 import org.slf4j.Logger;
@@ -69,7 +70,7 @@ public class CassandraSink extends RichSinkFunction<IAccumulator> {
     }
 
     @Override
-    public void invoke(IAccumulator iAccumulator) throws Exception {
+    public void invoke(IAccumulator iAccumulator, Context c) throws Exception {
         // TODO concurrency ??
         // get the record
         AggregationRecord record = iAccumulator.getRecord();

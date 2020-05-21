@@ -6,14 +6,13 @@ import ch.derlin.bbdata.flink.pojo.Measure;
 import ch.derlin.bbdata.flink.sinks.CassandraSink;
 import ch.derlin.bbdata.flink.utils.DateUtil;
 import ch.derlin.bbdata.flink.window.WindowMapper;
+import org.apache.flink.api.common.serialization.SimpleStringSchema;
 import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.streaming.api.CheckpointingMode;
 import org.apache.flink.streaming.api.TimeCharacteristic;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumer010;
-import org.apache.flink.streaming.util.serialization.SimpleStringSchema;
-import org.apache.kafka.common.serialization.StringSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -81,7 +80,6 @@ public class Main {
             Properties prop = new Properties();
             prop.put("group.id", consumerGroup);
             prop.put("bootstrap.servers", kafkaBrokers);
-            prop.put("value.serializer", StringSerializer.class.getCanonicalName());
             prop.put("auto.offset.reset", "earliest");
 
             final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
