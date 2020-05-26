@@ -37,17 +37,13 @@ structure (see `aggregations.cql`):
 
 clone this repository and create the jar:
 
-    git clone git@gitlab.forge.hefr.ch:bbdata/flink-aggregations.git
+    git git@github.com:big-building-data/flink-aggregations.git
     cd flink-aggregations
     mvn package
 
-Copy the jar to daplab-app-1 (if not already on the daplab) :
-
-    scp target/flink-aggregations-*-full.jar daplab-app-1.fri.lan:/opt/bbdata/flink
-
 Create a `config.properties` file based on the template available in `src/main/resources/config.properties-template` and
 modify the values accordingly. If you intend to run this application with multiple granularites, ensure you create
-different properties files for each, changing the `window.granularity` and the `kafka.consumer.group` properties.
+different properties files for each, changing AT LEAST the `window.granularity` and the `kafka.consumer.group` properties.
 
 
 ### Running the application (yarn)
@@ -62,7 +58,7 @@ To run the application, you have two options:
 
 Launch a new flink session:
 
-    flink/bin/yarn-session.sh -d -n 4 -jm 1024 -tm 4096
+    flink/bin/yarn-session.sh -d -n 4
 
 Launch the application:
 
@@ -72,7 +68,7 @@ Launch the application:
 #### Running in standalone mode
 
     flink run -d --yarnstreaming --jobmanager yarn-cluster -yn 1 -j flink-aggregations-*-full.jar \
-        -c ch.derlin.bbdata.flink.Main  config.properties
+        -c ch.derlin.bbdata.flink.Main config.properties
 
 
 # Why a custom windowing system ?
@@ -108,12 +104,3 @@ database update to every five minutes or so, which is still often for windows of
 # How we proceed in our custom implementation
 
 This repository uses Flink states and rich map functions to implement its own sliding window mecanism.
-
-
-
-
-
-
-
-
-
