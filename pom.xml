@@ -57,11 +57,29 @@
             <groupId>com.datastax.cassandra</groupId>
             <artifactId>cassandra-driver-core</artifactId>
             <version>${cassandra.version}</version>
+            <!--avoid "java.lang.ClassCastException: io.netty.channel.epoll.EpollEventLoopGroup cannot be cast to
+            io.netty.channel.EventLoopGroup"-->
+            <!--see https://es.coredump.biz/questions/48762857/javalangclasscastexception-netty-fail-on-jar-execution-on-flink-->
+            <exclusions>
+                <exclusion>
+                    <groupId>io.netty</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>com.datastax.cassandra</groupId>
             <artifactId>cassandra-driver-mapping</artifactId>
             <version>${cassandra.version}</version>
+            <!--avoid "java.lang.ClassCastException: io.netty.channel.epoll.EpollEventLoopGroup cannot be cast to
+            io.netty.channel.EventLoopGroup"-->
+            <!--see https://es.coredump.biz/questions/48762857/javalangclasscastexception-netty-fail-on-jar-execution-on-flink-->
+            <exclusions>
+                <exclusion>
+                    <groupId>io.netty</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>

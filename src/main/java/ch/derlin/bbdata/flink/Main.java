@@ -104,6 +104,7 @@ public class Main {
             env.enableCheckpointing(checkpointInterval, CheckpointingMode.EXACTLY_ONCE);
             if (externalizedCheckpointsPath != null) {
                 env.getCheckpointConfig().enableExternalizedCheckpoints(RETAIN_ON_CANCELLATION);
+                // similar to setting state.checkpoints.dir: <PATH>
                 env.setStateBackend((StateBackend) new FsStateBackend(externalizedCheckpointsPath));
             }
             // pass configuration to the jobs
