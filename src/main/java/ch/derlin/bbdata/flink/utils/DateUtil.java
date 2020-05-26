@@ -4,7 +4,6 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
 import java.text.SimpleDateFormat;
-import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.TimeZone;
 
@@ -34,7 +33,7 @@ public class DateUtil {
     }
 
     public static String dateToString(Long t) {
-        return t == null ? "null" : new DateTime(t).toString("HH:mm:ss");
+        return t == null ? "null" : new DateTime(t).toString("YYYY-MM-dd'T'HH:mm:ss");
     }
 
     public static String dateToString(Date d) {

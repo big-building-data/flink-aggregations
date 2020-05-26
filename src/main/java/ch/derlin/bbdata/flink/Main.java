@@ -8,6 +8,8 @@ import ch.derlin.bbdata.flink.utils.DateUtil;
 import ch.derlin.bbdata.flink.window.WindowMapper;
 import org.apache.flink.api.common.serialization.SimpleStringSchema;
 import org.apache.flink.api.java.utils.ParameterTool;
+import org.apache.flink.runtime.state.StateBackend;
+import org.apache.flink.runtime.state.filesystem.FsStateBackend;
 import org.apache.flink.streaming.api.CheckpointingMode;
 import org.apache.flink.streaming.api.TimeCharacteristic;
 import org.apache.flink.streaming.api.datastream.DataStream;
@@ -69,7 +71,7 @@ public class Main {
 
             // flink
             long checkpointInterval = parameters.getLong("flink.checkpoints.interval", DEFAULT_CHECKPOINT_INTERVAL);
-            boolean externalizedCheckpoints = parameters.getBoolean("flink.checkpoints.externalized", false);
+            String externalizedCheckpointsPath = parameters.get("flink.checkpoints.externalized.path", null);
 
             // kafka
             String kafkaBrokers = parameters.getRequired("kafka.brokers");
@@ -100,8 +102,9 @@ public class Main {
 
             // setup checkpoints
             env.enableCheckpointing(checkpointInterval, CheckpointingMode.EXACTLY_ONCE);
-            if (externalizedCheckpoints) {
+            if (externalizedCheckpointsPath != null) {
                 env.getCheckpointConfig().enableExternalizedCheckpoints(RETAIN_ON_CANCELLATION);
+                env.setStateBackend((StateBackend) new FsStateBackend(externalizedCheckpointsPath));
             }
             // pass configuration to the jobs
             env.getConfig().setGlobalJobParameters(parameters.getConfiguration());

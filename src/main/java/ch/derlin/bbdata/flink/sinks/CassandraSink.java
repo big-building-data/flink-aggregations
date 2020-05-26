@@ -11,10 +11,13 @@ import com.datastax.driver.mapping.Mapper;
 import com.datastax.driver.mapping.MappingManager;
 import org.apache.flink.api.common.time.Time;
 import org.apache.flink.configuration.ConfigOption;
+import org.apache.flink.configuration.ConfigOptions;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.functions.sink.RichSinkFunction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.List;
 
 /**
  * date: 10.03.17
@@ -32,10 +35,14 @@ public class CassandraSink extends RichSinkFunction<IAccumulator> {
     protected transient Mapper<AggregationRecord> mapper;
     protected transient long windowSizeMillis;
 
-
     @Override
     public void open(Configuration parameters) throws Exception {
         super.open(parameters);
+
+        // config
+        ConfigOption<List<String>> configEntryPoints =
+                ConfigOptions.key("cassandra.entryPoints").stringType().asList().noDefaultValue()
+                        .withDescription("Comma-separated list of entrypoints (IP, host) to connect to Cassandra");
 
         DateUtil.setDefaultToUTC();
 
@@ -45,7 +52,7 @@ public class CassandraSink extends RichSinkFunction<IAccumulator> {
                     //.withLoadBalancingPolicy(new TokenAwarePolicy(new DCAwareRoundRobinPolicy()))
                     // TODO does it improve performances ?
                     ;
-            for (String address : config.getString("cassandra.entryPoints", "").split(",")) {
+            for (String address : config.get(configEntryPoints)) {
                 builder.addContactPoint(address.trim());
             }
 
