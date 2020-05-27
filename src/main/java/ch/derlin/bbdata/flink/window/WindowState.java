@@ -33,7 +33,7 @@ import java.util.TreeMap;
  */
 public class WindowState {
 
-    // if not transcient, will be restored with the state and we end up with the
+    // if not transient, will be restored with the state and we end up with the
     // internal logger (LOG.logger) as null --> nullpointerexception upon logging
     private transient Logger LOG = LoggerFactory.getLogger(WindowState.class);
 
@@ -52,7 +52,7 @@ public class WindowState {
 
     // the size of the windows, in milliseconds
     private long windowSizeMillis;
-    // the max lateness allowed to consider the record "on-time"
+    // the max lateness allowed to consider the record "on-time" (in ms)
     private long allowedLateness;
     // the source identification (all measure treated by this instance should have this objectId)
     public transient int objectId = -1;
@@ -100,7 +100,7 @@ public class WindowState {
                 return; // nothing left to do
             } else {
                 // the window it belongs to is still in memory, so we can process it normally
-                LOG.debug("LATE RECORD: (window in scope) '{}'", timeAdvance, measure);
+                LOG.debug("LATE RECORD: (window in scope) {} '{}'", timeAdvance, measure);
             }
         } else {
             // the measure is "on-time", update the timeAdvance if necessary

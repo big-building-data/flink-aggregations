@@ -1,5 +1,6 @@
 package ch.derlin.bbdata.flink.sinks;
 
+import ch.derlin.bbdata.flink.Configs;
 import ch.derlin.bbdata.flink.accumulators.IAccumulator;
 import ch.derlin.bbdata.flink.accumulators.LateRecordAccumulator;
 import ch.derlin.bbdata.flink.pojo.AggregationRecord;
@@ -10,14 +11,10 @@ import com.datastax.driver.core.policies.DefaultRetryPolicy;
 import com.datastax.driver.mapping.Mapper;
 import com.datastax.driver.mapping.MappingManager;
 import org.apache.flink.api.common.time.Time;
-import org.apache.flink.configuration.ConfigOption;
-import org.apache.flink.configuration.ConfigOptions;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.functions.sink.RichSinkFunction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.List;
 
 /**
  * date: 10.03.17
@@ -38,12 +35,6 @@ public class CassandraSink extends RichSinkFunction<IAccumulator> {
     @Override
     public void open(Configuration parameters) throws Exception {
         super.open(parameters);
-
-        // config
-        ConfigOption<List<String>> configEntryPoints =
-                ConfigOptions.key("cassandra.entryPoints").stringType().asList().noDefaultValue()
-                        .withDescription("Comma-separated list of entrypoints (IP, host) to connect to Cassandra");
-
         DateUtil.setDefaultToUTC();
 
         try {
@@ -52,7 +43,7 @@ public class CassandraSink extends RichSinkFunction<IAccumulator> {
                     //.withLoadBalancingPolicy(new TokenAwarePolicy(new DCAwareRoundRobinPolicy()))
                     // TODO does it improve performances ?
                     ;
-            for (String address : config.get(configEntryPoints)) {
+            for (String address : Configs.readCassandraEntrypoints(config)) {
                 builder.addContactPoint(address.trim());
             }
 
@@ -67,8 +58,7 @@ public class CassandraSink extends RichSinkFunction<IAccumulator> {
 
             // the window size is used as a primary key in the aggregation table.
             // we will add it in invoke()
-            int windowSizeMinutes = config.getInteger("window.granularity", 15);
-            windowSizeMillis = Time.minutes(windowSizeMinutes).toMilliseconds();
+            windowSizeMillis = Configs.readWindowParameters(config)[0];
 
         } catch (Exception e) {
             LOGGER.error("setup/open failed", e);
@@ -115,7 +105,8 @@ public class CassandraSink extends RichSinkFunction<IAccumulator> {
 
     @Override
     public void close() {
-        cluster.closeAsync();
+        if (cluster != null)
+            cluster.closeAsync();
     }
 
 }

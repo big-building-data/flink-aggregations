@@ -1,11 +1,11 @@
 package ch.derlin.bbdata.flink.window;
 
+import ch.derlin.bbdata.flink.Configs;
 import ch.derlin.bbdata.flink.accumulators.IAccumulator;
 import ch.derlin.bbdata.flink.pojo.Measure;
 import ch.derlin.bbdata.flink.utils.DateUtil;
 import org.apache.flink.api.common.state.ValueState;
 import org.apache.flink.api.common.state.ValueStateDescriptor;
-import org.apache.flink.api.common.time.Time;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.java.tuple.Tuple;
 import org.apache.flink.configuration.ConfigOption;
@@ -41,10 +41,8 @@ public class WindowMapper extends KeyedProcessFunction<Tuple, Measure, IAccumula
     // after how many minutes do we consider the object has stopped sending records and the windows need to
     // be flushed (in ms)
     private transient long timeout;
-    // the window granularity, in ms
-    private transient long granularity;
-    // the lateness allowed, that is how long do we keep a window in memory after its window is passed, in ms
-    private transient long allowedLateness;
+    // the window granularity + allowedLateness, in ms
+    private transient long[] windowParameters;
 
     // the last time the mapper received a measure (system time)
     private transient long lastProcessingTime;
@@ -69,22 +67,16 @@ public class WindowMapper extends KeyedProcessFunction<Tuple, Measure, IAccumula
     public void open(Configuration parameters) throws Exception {
         // ensure the JVM and JodaTime are configured for UTC dates
         DateUtil.setDefaultToUTC();
-        // define configuration
-        // all those options are in minutes
-        ConfigOption<Integer> configGranularity = ConfigOptions.key("window.granularity").intType().defaultValue(15);
-        ConfigOption<Integer> configLateness = ConfigOptions.key("window.allowed_lateness").intType().defaultValue(5);
-        ConfigOption<Integer> configTimeout = ConfigOptions.key("window.timeout").intType().defaultValue(10);
 
         // extract configuration properties from the context
         Configuration config = (Configuration) getRuntimeContext().getExecutionConfig().getGlobalJobParameters();
-        granularity = Time.minutes(config.get(configGranularity)).toMilliseconds();
-        allowedLateness = Time.minutes(config.get(configLateness)).toMilliseconds();
-        timeout = Time.minutes(config.get(configTimeout)).toMilliseconds();
+        windowParameters = Configs.readWindowParameters(config);
+        timeout = Configs.readTimeout(config);
 
         // fetch the state from Flink backend
         ValueStateDescriptor<WindowState> descriptor =
                 new ValueStateDescriptor<>(
-                        "AccWindowState_" + granularity, // the state name
+                        "AccWindowState_" + windowParameters[0], // the state name
                         TypeInformation.of(WindowState.class) // type information
                 );
         state = getRuntimeContext().getState(descriptor);
@@ -108,6 +100,6 @@ public class WindowMapper extends KeyedProcessFunction<Tuple, Measure, IAccumula
 
     private WindowState getOrCreateState() throws IOException {
         WindowState windowState = state.value();
-        return windowState == null ? new WindowState(granularity, allowedLateness) : windowState;
+        return windowState == null ? new WindowState(windowParameters[0], windowParameters[1]) : windowState;
     }
 }
