@@ -61,7 +61,7 @@ public class Configs {
 
     public static long readTimeout(Configuration config) {
         int timeout = config.get(configTimeout);
-        if (timeout <= config.get(configGranularity) + config.get(configLateness))
+        if (timeout < config.get(configGranularity) + config.get(configLateness))
             throw new RuntimeException(String.format("%s should be > %s + %s",
                     configTimeout.key(), configGranularity.key(), configLateness.key()));
         return Time.minutes(timeout).toMilliseconds();
