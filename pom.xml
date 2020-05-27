@@ -16,8 +16,6 @@
         <slf4j.version>1.7.21</slf4j.version>
         <bbdata.commons.version>0.0.2</bbdata.commons.version>
         <cassandra.version>3.1.0</cassandra.version>
-        <!--set provided below for the cluster, compile for local testing-->
-        <scope.type>compile</scope.type>
     </properties>
 
     <dependencies>
@@ -53,34 +51,7 @@
         </dependency>
 
         <!--cassandra-->
-        <dependency>
-            <groupId>com.datastax.cassandra</groupId>
-            <artifactId>cassandra-driver-core</artifactId>
-            <version>${cassandra.version}</version>
-            <!--avoid "java.lang.ClassCastException: io.netty.channel.epoll.EpollEventLoopGroup cannot be cast to
-            io.netty.channel.EventLoopGroup"-->
-            <!--see https://es.coredump.biz/questions/48762857/javalangclasscastexception-netty-fail-on-jar-execution-on-flink-->
-            <exclusions>
-                <exclusion>
-                    <groupId>io.netty</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>com.datastax.cassandra</groupId>
-            <artifactId>cassandra-driver-mapping</artifactId>
-            <version>${cassandra.version}</version>
-            <!--avoid "java.lang.ClassCastException: io.netty.channel.epoll.EpollEventLoopGroup cannot be cast to
-            io.netty.channel.EventLoopGroup"-->
-            <!--see https://es.coredump.biz/questions/48762857/javalangclasscastexception-netty-fail-on-jar-execution-on-flink-->
-            <exclusions>
-                <exclusion>
-                    <groupId>io.netty</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
+        <!-- see profiles for datastax deps -->
 
         <dependency>
             <groupId>com.google.guava</groupId>
@@ -127,6 +98,67 @@
 
     </dependencies>
 
+    <profiles>
+        <profile>
+            <id>local-dev</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <properties>
+                <scope.type>compile</scope.type>
+            </properties>
+            <dependencies>
+                <!-- regular cassandra: no exclusion -->
+                <dependency>
+                    <groupId>com.datastax.cassandra</groupId>
+                    <artifactId>cassandra-driver-core</artifactId>
+                    <version>${cassandra.version}</version>
+                </dependency>
+                <dependency>
+                    <groupId>com.datastax.cassandra</groupId>
+                    <artifactId>cassandra-driver-mapping</artifactId>
+                    <version>${cassandra.version}</version>
+                </dependency>
+            </dependencies>
+        </profile>
+
+        <profile>
+            <id>prod</id>
+            <properties>
+                <scope.type>provided</scope.type>
+            </properties>
+            <dependencies>
+                <!--avoid "java.lang.ClassCastException: io.netty.channel.epoll.EpollEventLoopGroup cannot be cast to
+                io.netty.channel.EventLoopGroup" by excluding io.netty -->
+                <!--see https://es.coredump.biz/questions/48762857/javalangclasscastexception-netty-fail-on-jar-execution-on-flink-->
+                <dependency>
+                    <groupId>com.datastax.cassandra</groupId>
+                    <artifactId>cassandra-driver-core</artifactId>
+                    <version>${cassandra.version}</version>
+                    <exclusions>
+                        <exclusion>
+                            <groupId>io.netty</groupId>
+                            <artifactId>*</artifactId>
+                        </exclusion>
+                    </exclusions>
+                </dependency>
+                <dependency>
+                    <groupId>com.datastax.cassandra</groupId>
+                    <artifactId>cassandra-driver-mapping</artifactId>
+                    <version>${cassandra.version}</version>
+                    <!--avoid "java.lang.ClassCastException: io.netty.channel.epoll.EpollEventLoopGroup cannot be cast to
+                    io.netty.channel.EventLoopGroup"-->
+                    <!--see https://es.coredump.biz/questions/48762857/javalangclasscastexception-netty-fail-on-jar-execution-on-flink-->
+                    <exclusions>
+                        <exclusion>
+                            <groupId>io.netty</groupId>
+                            <artifactId>*</artifactId>
+                        </exclusion>
+                    </exclusions>
+                </dependency>
+            </dependencies>
+        </profile>
+    </profiles>
 
     <build>
         <plugins>

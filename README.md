@@ -48,7 +48,11 @@ different properties files for each, changing AT LEAST the `window.granularity` 
 
 ### Running the application (yarn)
 
-To run the application, you have two options:
+**IMPORTANT**: you need to build the project with the **prod Maven profile** enabled:
+
+    mvn package -P prod
+
+To run the application on yarn, you have two options:
 
 1. launch a new flink session and run the application(s) in the session
 2. launch the application(s) in standalone mode
