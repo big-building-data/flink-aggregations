@@ -43,26 +43,36 @@ public class Configs {
 
     // =============== getters
 
-    public static long[] readWindowParameters(Configuration config) {
-        long granularity = Time.minutes(config.get(configGranularity)).toMilliseconds();
-        long allowedLateness = Time.minutes(config.get(configLateness)).toMilliseconds();
-        if (allowedLateness < granularity) {
+    public static long readGranularity(Configuration config) {
+        long granularity = config.get(configGranularity);
+        if (granularity <= 0)
             throw new RuntimeException(String.format(
-                    "window.allowed_lateness (%d) should be >= window.granularity (%d)", allowedLateness, granularity));
-        }
-        return new long[]{granularity, allowedLateness};
+                    "%s (%d) should be > 0", configGranularity.key(), granularity));
+        return Time.minutes(granularity).toMilliseconds();
     }
 
+    public static long readAllowedLateness(Configuration config) {
+        long lateness = config.get(configLateness);
+        if (lateness < 0)
+            throw new RuntimeException(String.format(
+                    "%s (%d) should be > 0", configLateness.key(), lateness));
+        return Time.minutes(lateness).toMilliseconds();
+    }
 
     public static long readTimeout(Configuration config) {
         int timeout = config.get(configTimeout);
-        if (timeout <= 0)
-            throw new RuntimeException("window.timeout should be positive");
+        if (timeout <= config.get(configGranularity) + config.get(configLateness))
+            throw new RuntimeException(String.format("%s should be > %s + %s",
+                    configTimeout.key(), configGranularity.key(), configLateness.key()));
         return Time.minutes(timeout).toMilliseconds();
     }
 
 
     public static List<String> readCassandraEntrypoints(Configuration config) {
-        return config.get(configEntryPoints);
+        List<String> entrypoints = config.get(configEntryPoints);
+        if (entrypoints.size() == 0)
+            throw new RuntimeException(String.format(
+                    "Missing Cassandra entrypoing '%s' in config.", configEntryPoints.key()));
+        return entrypoints;
     }
 }

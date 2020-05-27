@@ -10,7 +10,6 @@ import com.datastax.driver.core.Session;
 import com.datastax.driver.core.policies.DefaultRetryPolicy;
 import com.datastax.driver.mapping.Mapper;
 import com.datastax.driver.mapping.MappingManager;
-import org.apache.flink.api.common.time.Time;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.functions.sink.RichSinkFunction;
 import org.slf4j.Logger;
@@ -30,7 +29,6 @@ public class CassandraSink extends RichSinkFunction<IAccumulator> {
     protected transient Cluster cluster;
     protected transient Session session;
     protected transient Mapper<AggregationRecord> mapper;
-    protected transient long windowSizeMillis;
 
     @Override
     public void open(Configuration parameters) throws Exception {
@@ -55,10 +53,6 @@ public class CassandraSink extends RichSinkFunction<IAccumulator> {
             // the mapper will do the mapping between cassandra records and AggregationRecord objects
             MappingManager manager = new MappingManager(session);
             mapper = manager.mapper(AggregationRecord.class);
-
-            // the window size is used as a primary key in the aggregation table.
-            // we will add it in invoke()
-            windowSizeMillis = Configs.readWindowParameters(config)[0];
 
         } catch (Exception e) {
             LOGGER.error("setup/open failed", e);
