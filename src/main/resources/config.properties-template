@@ -7,9 +7,9 @@
 kafka.brokers=localhost:6667
 # the source topic, with the augmented values
 kafka.augmentation=bbdata2-augmented
-# (optional) the consumer group to use
+# the consumer group to use
 # if you run multiple instances of this application (one for each aggregation granularity),
-# ensure you give a different consumer group for each application !
+# ensure you give a DIFFERENT consumer group for each application !
 kafka.consumer.group=flink-aggregation-01
 
 # Cassandra
@@ -18,16 +18,17 @@ kafka.consumer.group=flink-aggregation-01
 # the cassandra instance should have a table bbdata2.aggregations table !
 #
 # the cassandra entrypoints, a list of ip addresses separated by comma
-cassandra.entryPoints=
+cassandra.entrypoints=127.0.0.1
 
 # Flink checkpoints
 # =================
 # configure checkpointing
 #
 # the checkpoint interval
-flink.checkpoints.interval=30000
-# wether or not to use the externalized checkpoints (Flink 1.2+)
-flink.checkpoints.externalized=true
+#flink.checkpoints.interval=
+# where to store checkpoints. If set, the checkpoints will also be retained on cancellation.
+# in other words, you NEED to provide a path if you want EXTERNALIZED CHECKPOINTS turned on.
+flink.checkpoints.path=file:///tmp/flink
 
 # Window aggregations
 # ===================
@@ -37,12 +38,13 @@ flink.checkpoints.externalized=true
 window.granularity=15
 # how many minutes a measure can be late in order to be considered "on-time". Note that the longer the
 # allowed lateness, the longer a window stays in memory.
-# If you have a window granularity and the allowed lateness in 30 minutes, then the process will keep the last
+# If you have a window granularity of 15 and the allowed lateness in 30 minutes, then the process will keep the last
 # two closed windows around --> there will be 3 windows in memory at any given time.
 window.allowed_lateness=5
 # how long do we keep windows open when no new record is submitted for a given object. This is useful in case
 # a source stops sending values. In this case, we don't want the windows to stay open indefinitely.
 # Thus, the process will remember the last _processing time_ it processed a value and after "timeout" without new
-# measures it will flush all windows still in memory.
-window.timeout=20
-
+# measures it will flush all windows still in memory. Default to window.granularity + window.allowed_lateness.
+#window.timeout=
+# how long before checking for old windows, and flushing them is needed. Default to 2 minutes.
+#window.flush_every=

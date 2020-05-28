@@ -8,6 +8,7 @@ import ch.derlin.bbdata.flink.utils.DateUtil;
 import ch.derlin.bbdata.flink.window.WindowMapper;
 import org.apache.flink.api.common.serialization.SimpleStringSchema;
 import org.apache.flink.api.java.utils.ParameterTool;
+import org.apache.flink.configuration.Configuration;
 import org.apache.flink.runtime.state.StateBackend;
 import org.apache.flink.runtime.state.filesystem.FsStateBackend;
 import org.apache.flink.streaming.api.CheckpointingMode;
@@ -37,11 +38,7 @@ import static org.apache.flink.streaming.api.environment.CheckpointConfig.Extern
  */
 public class Main {
 
-    // general
-    private static final long DEFAULT_CHECKPOINT_INTERVAL = 10000;
     private static String UID_PREFIX = "ch.derlin.bbdata.flink.custom.window.";
-
-    // logging
     private static final Logger LOGGER = LoggerFactory.getLogger(Main.class);
 
 
@@ -59,31 +56,27 @@ public class Main {
             Path configPath = Paths.get(args[0]);
             LOGGER.info("Loading properties from file: {}", configPath);
 
+            // read config file and convert it to a flink configuration
             ParameterTool parameters = ParameterTool.fromPropertiesFile(configPath.toAbsolutePath().toString());
+            Configuration config = parameters.getConfiguration();
             LOGGER.info("properties: {}", parameters.toMap());
 
-            // ensure granularity is ok
-            int granularity = parameters.getInt("window.granularity", -1);
-            if (granularity <= 0) {
-                System.err.println("Incorrect property window.granularity...");
-                System.exit(1);
-            }
+            // ensure properties are ok
+            Configs.checkConfig(config);
+            int granularityMinutes = parameters.getInt(Configs.configGranularity.key());
 
-            // flink
-            long checkpointInterval = parameters.getLong("flink.checkpoints.interval", DEFAULT_CHECKPOINT_INTERVAL);
-            String externalizedCheckpointsPath = parameters.get("flink.checkpoints.externalized.path", null);
-
-            // kafka
+            // read kafka parameters
             String kafkaBrokers = parameters.getRequired("kafka.brokers");
             String kafkaInput = parameters.getRequired("kafka.augmentation");
             String consumerGroup = parameters.getRequired("kafka.consumer.group");
 
-            // DataStream from Kafka
+            // configure DataStream from Kafka
             Properties prop = new Properties();
             prop.put("group.id", consumerGroup);
             prop.put("bootstrap.servers", kafkaBrokers);
             prop.put("auto.offset.reset", "earliest");
 
+            // setup job
             final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
             env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
 
@@ -101,16 +94,16 @@ public class Main {
 
 
             // setup checkpoints
-            env.enableCheckpointing(checkpointInterval, CheckpointingMode.EXACTLY_ONCE);
-            if (externalizedCheckpointsPath != null) {
+            env.enableCheckpointing(Configs.readCheckpointsInterval(config), CheckpointingMode.EXACTLY_ONCE);
+            String checkpointsPath = Configs.readCheckpointsPath(config);
+            if (checkpointsPath != null) {
                 env.getCheckpointConfig().enableExternalizedCheckpoints(RETAIN_ON_CANCELLATION);
                 // similar to setting state.checkpoints.dir: <PATH>
-                env.setStateBackend((StateBackend) new FsStateBackend(externalizedCheckpointsPath));
+                env.setStateBackend((StateBackend) new FsStateBackend(checkpointsPath));
             }
-            // pass configuration to the jobs
+            // pass configuration to the jobs and go !
             env.getConfig().setGlobalJobParameters(parameters.getConfiguration());
-
-            env.execute(String.format("bbdata-aggregation (granularity=%d)", granularity));
+            env.execute(String.format("bbdata-aggregation (granularity=%d)", granularityMinutes));
         } catch (Exception e) {
             LOGGER.error("{}", e);
             throw e;

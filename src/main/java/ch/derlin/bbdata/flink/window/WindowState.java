@@ -54,6 +54,8 @@ public class WindowState {
     private long windowSizeMillis;
     // the max lateness allowed to consider the record "on-time" (in ms)
     private long allowedLateness;
+    // how often to check for old windows
+    private long flushEvery;
     // the source identification (all measure treated by this instance should have this objectId)
     public transient int objectId = -1;
 
@@ -66,9 +68,10 @@ public class WindowState {
      * @param windowSizeMillis the size of the window, in milliseconds
      * @param allowedLateness  the lateness allowed, in milliseconds
      */
-    public WindowState(long windowSizeMillis, long allowedLateness) {
+    public WindowState(long windowSizeMillis, long allowedLateness, long flushEvery) {
         this.windowSizeMillis = windowSizeMillis;
         this.allowedLateness = allowedLateness;
+        this.flushEvery = flushEvery;
     }
 
     /**
@@ -123,7 +126,7 @@ public class WindowState {
 
         // every once in awhile, check for "old window" that we can close and forward.
         // don't do it every time to reduce useless processing
-        if (timeAdvance - lastCleanup > windowSizeMillis) {
+        if (timeAdvance - lastCleanup >= flushEvery) {
             finalizeOldWindows(collector);
             lastCleanup = timeAdvance;
         }

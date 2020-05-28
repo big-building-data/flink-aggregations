@@ -41,8 +41,8 @@ public class WindowMapper extends KeyedProcessFunction<Tuple, Measure, IAccumula
     // after how many minutes do we consider the object has stopped sending records and the windows need to
     // be flushed (in ms)
     private transient long timeout;
-    // the window granularity + allowedLateness, in ms
-    private transient long granularity, allowedLateness;
+    // the window parametesr, all in ms
+    private transient long granularity, allowedLateness, flushEvery;
 
     // the last time the mapper received a measure (system time)
     private transient long lastProcessingTime;
@@ -72,6 +72,7 @@ public class WindowMapper extends KeyedProcessFunction<Tuple, Measure, IAccumula
         Configuration config = (Configuration) getRuntimeContext().getExecutionConfig().getGlobalJobParameters();
         granularity = Configs.readGranularity(config);
         allowedLateness = Configs.readAllowedLateness(config);
+        flushEvery = Configs.readFlushEvery(config);
         timeout = Configs.readTimeout(config);
 
         // fetch the state from Flink backend
@@ -101,6 +102,6 @@ public class WindowMapper extends KeyedProcessFunction<Tuple, Measure, IAccumula
 
     private WindowState getOrCreateState() throws IOException {
         WindowState windowState = state.value();
-        return windowState == null ? new WindowState(granularity, allowedLateness) : windowState;
+        return windowState == null ? new WindowState(granularity, allowedLateness, flushEvery) : windowState;
     }
 }
