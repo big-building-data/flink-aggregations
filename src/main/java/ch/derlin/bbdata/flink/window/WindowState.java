@@ -146,7 +146,7 @@ public class WindowState {
         Set<Long> keys = new LinkedHashSet<>(map.keySet());
 
         for (Long key : keys) {
-            if (key < timeAdvance - timeout) {
+            if (key <= timeAdvance - timeout) {
                 // we have an old window, finalize and close it
                 IAccumulator acc = map.get(key);
                 acc.finalise();

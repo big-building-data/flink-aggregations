@@ -2,13 +2,11 @@
 
 This repository implements the aggregations processor for BBData measures. It implements a custom windowing system for aggregations with a granularity of several minutes to several hours.
 
-## Quick start
+## Requirements
 
-### Requirements
-
-This application requires Flink 1.2+. It is intended to run in a BBData environment. The source kafka topic should
+This application requires Flink 1.10+. It is intended to run in a BBData environment. The source kafka topic should
 contain augmented measures and the cassandra database should have a table `bbdata2.aggregations` with the following
-structure (see `aggregations.cql`):
+structure (see `other/aggregations.cql`):
 
     CREATE TABLE bbdata2.aggregations (
         minutes int,
@@ -33,7 +31,7 @@ structure (see `aggregations.cql`):
     ) WITH CLUSTERING ORDER BY (timestamp DESC);
 
 
-### Build and configuration
+## Build and configuration
 
 clone this repository and create the jar:
 
@@ -46,7 +44,7 @@ modify the values accordingly. If you intend to run this application with multip
 different properties files for each, changing AT LEAST the `window.granularity` and the `kafka.consumer.group` properties.
 
 
-### Running the application (yarn)
+## Running the application (yarn)
 
 **IMPORTANT**: you need to build the project with the **prod Maven profile** enabled:
 
@@ -58,7 +56,7 @@ To run the application on yarn, you have two options:
 2. launch the application(s) in standalone mode
 
 
-#### Running inside a flink session
+### Running inside a flink session
 
 Launch a new flink session:
 
@@ -69,10 +67,15 @@ Launch the application:
     flink run flink-aggregations-*-full.jar config.properties
 
 
-#### Running in standalone mode
+### Running in standalone mode
 
     flink run -d --yarnstreaming --jobmanager yarn-cluster -yn 1 -j flink-aggregations-*-full.jar \
         -c ch.derlin.bbdata.flink.Main config.properties
+
+### Realtime logging with rsyslog
+
+Have a look at the file `other/log4j-rsyslog.properties` and follow its instructions.
+Based on [this article](https://riptutorial.com/apache-flink/example/29956/flink-on-yarn-workaround--get-logs-in-real-time-with-rsyslog)
 
 
 # Why a custom windowing system ?
