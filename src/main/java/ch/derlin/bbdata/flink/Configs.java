@@ -84,18 +84,17 @@ public class Configs {
     }
 
     public static long readTimeout(Configuration config) {
-        Integer t = config.get(configTimeout); // in minutes
-        int minTimeout = config.get(configGranularity) + config.get(configLateness); // in ms
-        if (t != null) {
-            long timeout = Time.minutes(t).toMilliseconds();
+        Integer timeout = config.get(configTimeout); // in minutes
+        int minTimeout = config.get(configGranularity) + config.get(configLateness); // in minutes
+        if (timeout != null) {
             if (timeout < minTimeout)
                 throw new RuntimeException(String.format("%s should be > %d (%s + %s)",
                         configTimeout.key(), minTimeout, configGranularity.key(), configLateness.key()));
-            return timeout;
         } else {
             // not set: default to granularity + lateness
-            return minTimeout;
+            timeout = minTimeout;
         }
+        return Time.minutes(timeout).toMilliseconds();
     }
 
     public static long readFlushEvery(Configuration config) {

@@ -74,6 +74,7 @@ public class WindowMapper extends KeyedProcessFunction<Tuple, Measure, IAccumula
         allowedLateness = Configs.readAllowedLateness(config);
         flushEvery = Configs.readFlushEvery(config);
         timeout = Configs.readTimeout(config);
+        assert timeout >= granularity + allowedLateness;
 
         // fetch the state from Flink backend
         ValueStateDescriptor<WindowState> descriptor =
