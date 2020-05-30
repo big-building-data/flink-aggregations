@@ -12,11 +12,9 @@ import ch.derlin.bbdata.flink.pojo.Measure;
  */
 public class LateRecordAccumulator implements IAccumulator {
 
-    public String dateClusteringKey;
     public AggregationRecord record;
 
-    public LateRecordAccumulator(AggregationRecord r, String dateClusteringKey) {
-        this.dateClusteringKey = dateClusteringKey;
+    public LateRecordAccumulator(AggregationRecord r) {
         this.record = r;
     }
 

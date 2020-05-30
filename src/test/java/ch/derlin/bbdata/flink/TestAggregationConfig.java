@@ -1,10 +1,10 @@
 package ch.derlin.bbdata.flink;
 
-import ch.derlin.bbdata.flink.accumulators.AdvancedAccumulator;
-import ch.derlin.bbdata.flink.accumulators.BasicAccumulator;
+import ch.derlin.bbdata.flink.accumulators.Accumulator;
 import ch.derlin.bbdata.flink.accumulators.IAccumulator;
 import ch.derlin.bbdata.flink.accumulators.LateRecordAccumulator;
 import ch.derlin.bbdata.flink.pojo.Measure;
+import ch.derlin.bbdata.flink.utils.DateUtil;
 import ch.derlin.bbdata.flink.utils.TestUTC;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -33,7 +33,7 @@ public class TestAggregationConfig implements TestUTC {
     })
     public void testWindowStart(long ts, int granularity, long expected) {
         long granularityMillis = granularity * 60_000L;
-        assertEquals(granularity, AggregationConfiguration.toMinutes(granularityMillis));
+        assertEquals(granularity, DateUtil.ms2Minutes(granularityMillis));
 
         long result = AggregationConfiguration.getWindowStart(ts, granularityMillis);
         assertEquals(expected, result);
@@ -76,13 +76,15 @@ public class TestAggregationConfig implements TestUTC {
         // test random basic unit
         m.unitSymbol = AggregationConfiguration.BASIC_AGGR_UNITS.get(random.nextInt(AggregationConfiguration.BASIC_AGGR_UNITS.size()));
         acc = AggregationConfiguration.getAccumulatorFor(m, windowStart, granularity);
-        assertTrue(acc instanceof BasicAccumulator);
+        assertTrue(acc instanceof Accumulator);
+        assertFalse(((Accumulator) acc).isWithStdev());
         checkAcc(acc);
 
         // test random advanced unit
         m.unitSymbol = AggregationConfiguration.ADVANCED_AGGR_UNITS.get(random.nextInt(AggregationConfiguration.ADVANCED_AGGR_UNITS.size()));
         acc = AggregationConfiguration.getAccumulatorFor(m, windowStart, granularity);
-        assertTrue(acc instanceof AdvancedAccumulator);
+        assertTrue(acc instanceof Accumulator);
+        assertTrue(((Accumulator) acc).isWithStdev());
         checkAcc(acc);
 
         // test late acc (don't change the type)

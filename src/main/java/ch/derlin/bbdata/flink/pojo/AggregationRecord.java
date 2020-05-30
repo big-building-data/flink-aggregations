@@ -83,7 +83,7 @@ public class AggregationRecord {
      */
     public void addOne(AggregationRecord r) {
         // this window should have record(s), the other should have only 1
-        if (this.count == 0 || r.count > 1) {
+        if (this.count == 0 || r.count != 1) {
             throw new RuntimeException(String.format(
                     "error in addOne. this.count (%d) == 0 || other.count (%d) > 1", this.count, r.count));
         }

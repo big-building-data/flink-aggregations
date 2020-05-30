@@ -34,4 +34,8 @@ public class DateUtil {
         DateTimeZone.setDefault(DateTimeZone.UTC);
     }
 
+    public static int ms2Minutes(long millis) {
+        return (int) (millis / 60000);
+    }
+
 }

@@ -1,18 +1,18 @@
 package ch.derlin.bbdata.flink;
 
-import ch.derlin.bbdata.flink.accumulators.AdvancedAccumulator;
-import ch.derlin.bbdata.flink.accumulators.BasicAccumulator;
+import ch.derlin.bbdata.flink.accumulators.Accumulator;
 import ch.derlin.bbdata.flink.accumulators.IAccumulator;
 import ch.derlin.bbdata.flink.accumulators.LateRecordAccumulator;
 import ch.derlin.bbdata.flink.pojo.Measure;
 import org.joda.time.DateTime;
 
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 
+import static ch.derlin.bbdata.flink.utils.DateUtil.ms2Minutes;
+
 /**
- * This class 
+ * This class
  * date: 10.03.17
  *
  * @author Lucy Linder <lucy.derlin@gmail.com>
@@ -34,22 +34,14 @@ public class AggregationConfiguration {
         acc.fold(m);
         acc.finalise();
         // then, wrap the accumulator in a lateRecord
-        return new LateRecordAccumulator(acc.getRecord(), getDateClusteringKeyFor(windowStart, windowSizeMillis));
+        return new LateRecordAccumulator(acc.getRecord());
     }
 
     public static IAccumulator getAccumulatorFor(Measure m, long windowStart, long windowSizeMillis) {
         assert isAggregationTarget(m);
-        BasicAccumulator acc;
-
-        if (BASIC_AGGR_UNITS.contains(m.unitSymbol)) acc = new BasicAccumulator();
-        else acc = new AdvancedAccumulator();
-
-        acc.windowTime = windowStart;
-        acc.objectId = m.objectId;
-        acc.timestamp = new Date(windowStart);
-        acc.minutes = toMinutes(windowSizeMillis);
-        acc.date = getDateClusteringKeyFor(windowStart, windowSizeMillis);
-        return acc;
+        String clusteringKey = getDateClusteringKeyFor(windowStart, windowSizeMillis);
+        boolean withStdev = (ADVANCED_AGGR_UNITS.contains(m.unitSymbol));
+        return new Accumulator(windowStart, windowSizeMillis, clusteringKey, m.objectId, withStdev);
     }
 
 
@@ -59,14 +51,14 @@ public class AggregationConfiguration {
 
     public static long getWindowStart(long timestamp, long windowSizeMillis) {
         DateTime dt = new DateTime(timestamp);
-        int minutes = toMinutes(windowSizeMillis);
+        int minutes = ms2Minutes(windowSizeMillis);
         return dt.withMinuteOfHour((dt.getMinuteOfHour() / minutes) * minutes)
                 .minuteOfDay().roundFloorCopy().getMillis();
     }
 
     public static String getDateClusteringKeyFor(long windowStart, long windowSizeMillis) {
         DateTime d = new DateTime(windowStart);
-        if (toMinutes(windowSizeMillis) <= 60) {
+        if (ms2Minutes(windowSizeMillis) <= 60) {
             // one hour or less: partition by month
             return String.format("%4d-%02d", d.getYear(), d.getMonthOfYear());
         } else {
@@ -74,9 +66,4 @@ public class AggregationConfiguration {
             return String.format("%4d-%02d", d.getYear(), d.getMonthOfYear() <= 6 ? 1 : 12);
         }
     }
-
-    public static int toMinutes(long millis) {
-        return (int) (millis / 60000);
-    }
-
 }

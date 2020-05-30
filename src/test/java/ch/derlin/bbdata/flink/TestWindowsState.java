@@ -1,6 +1,6 @@
 package ch.derlin.bbdata.flink;
 
-import ch.derlin.bbdata.flink.accumulators.AdvancedAccumulator;
+import ch.derlin.bbdata.flink.accumulators.Accumulator;
 import ch.derlin.bbdata.flink.accumulators.IAccumulator;
 import ch.derlin.bbdata.flink.accumulators.LateRecordAccumulator;
 import ch.derlin.bbdata.flink.pojo.Measure;
@@ -89,7 +89,8 @@ public class TestWindowsState {
         window.process(collector, m);
 
         assertEquals(1, collector.size());
-        assertTrue(collector.getLast() instanceof AdvancedAccumulator);
+        assertTrue(collector.getLast() instanceof Accumulator);
+        assertTrue(((Accumulator)collector.getLast()).isWithStdev());
         assertEquals(3, collector.getLast().getRecord().count); // 2 ok + 1 late
 
         // one late record, outside the allowedLateness

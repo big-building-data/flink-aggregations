@@ -1,10 +1,11 @@
 package ch.derlin.bbdata.flink;
 
-import ch.derlin.bbdata.flink.accumulators.AdvancedAccumulator;
+import ch.derlin.bbdata.flink.accumulators.Accumulator;
 import ch.derlin.bbdata.flink.pojo.AggregationRecord;
 import ch.derlin.bbdata.flink.pojo.Measure;
 import ch.derlin.bbdata.flink.utils.TestUTC;
 import org.junit.jupiter.api.RepeatedTest;
+import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -12,16 +13,19 @@ import java.util.List;
 import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * date: 29.05.20
  *
  * @author Lucy Linder <lucy.derlin@gmail.com>
  */
-public class TestAdvancedAccumulator implements TestUTC {
+public class TestAccumulator implements TestUTC {
 
     private static Random random = new Random();
-    private static final long START_TS = 1577876400000L;
+    private static final long START_TS = 1577876400000L, WSIZE = 15 * 60_000L;
+    private static final String DATE = "2020-01";
+    private static final int OID = 1;
 
     static class ExactAcc {
         List<Float> values;
@@ -71,19 +75,16 @@ public class TestAdvancedAccumulator implements TestUTC {
         }
     }
 
-    private static void initRecord(AggregationRecord acc) {
+    private static Accumulator newAccumulator() {
         // dummy
-        acc.objectId = 1;
-        acc.date = "2020-01";
-        acc.minutes = 15;
+        return new Accumulator(START_TS, WSIZE, DATE, OID);
     }
 
 
     @RepeatedTest(100)
     public void testAccRandom() {
         Measure m = new Measure();
-        AdvancedAccumulator acc = new AdvancedAccumulator();
-        initRecord(acc.getRecord());
+        Accumulator acc = newAccumulator();
 
         long ts = START_TS;
         ExactAcc expected = new ExactAcc();
@@ -102,8 +103,8 @@ public class TestAdvancedAccumulator implements TestUTC {
 
         // test addOne with new records
         for (int i = 0; i < 2; i++) {
-            AdvancedAccumulator lateAcc = new AdvancedAccumulator();
-            initRecord(lateAcc.getRecord());
+            Accumulator lateAcc = newAccumulator();
+
             m.floatValue = expected.gen();
             ts += random.nextInt(60000) + 100;
             m.timestamp = new Date(ts);
@@ -117,10 +118,10 @@ public class TestAdvancedAccumulator implements TestUTC {
 
         // test addOne, with old record
         float last = expected.last();
-
+        Accumulator lateAcc = null;
         for (int i = 0; i < 2; i++) {
-            AdvancedAccumulator lateAcc = new AdvancedAccumulator();
-            initRecord(lateAcc.getRecord());
+            lateAcc = newAccumulator();
+
             m.floatValue = expected.gen();
             m.timestamp = new Date(ts - random.nextInt(60000) - 1);
 
@@ -132,5 +133,42 @@ public class TestAdvancedAccumulator implements TestUTC {
             assertEquals(ts, acc.lastMeasureTimestamp);
         }
     }
+
+    @Test
+    public void testAddOneFail() {
+        Measure m = new Measure();
+        Accumulator acc = newAccumulator();
+
+        m.objectId = 1;
+        m.timestamp = new Date(START_TS);
+        m.floatValue = 1.2f;
+
+        // add to empty acc
+
+        Accumulator lateAcc1 = newAccumulator();
+        lateAcc1.fold(m);
+        lateAcc1.finalise();
+        assertThrows(Exception.class, () -> acc.addOne(lateAcc1.getRecord()));
+
+        //  make acc correct
+        acc.fold(m);
+        acc.fold(m);
+
+        // add empty acc
+        assertThrows(Exception.class, () -> acc.addOne(newAccumulator().getRecord()));
+
+        // add wrong  cassandra keys
+        AggregationRecord record = lateAcc1.getRecord();
+        record.objectId = 2;
+        assertThrows(Exception.class, () -> acc.addOne(record));
+        record.objectId = OID;
+        record.date = "2000-01";
+        assertThrows(Exception.class, () -> acc.addOne(record));
+        record.date = DATE;
+        record.minutes = 40;
+        assertThrows(Exception.class, () -> acc.addOne(record));
+
+    }
+
 
 }
