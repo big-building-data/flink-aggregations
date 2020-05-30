@@ -33,7 +33,8 @@ public class StringToFloatMeasureFlatMapper extends RichFlatMapFunction<String, 
             Measure m = gson.fromJson(s, Measure.class);
             if (AggregationConfiguration.isAggregationTarget(m)) {
                 m.floatValue = Float.parseFloat(m.value);
-                collector.collect(m);
+                if (!Float.isNaN(m.floatValue))
+                    collector.collect(m);
             }
         } catch (Exception e) {
             LOGGER.error("deserializing '{}'  ", s, e);

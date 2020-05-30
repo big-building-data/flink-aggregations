@@ -29,9 +29,10 @@ public class AggregationConfiguration {
 
     public static IAccumulator getLateAccumulatorFor(Measure m, long windowStart, long windowSizeMillis) {
         assert isAggregationTarget(m);
-        // create an accumulator and fold once to account for the single measure m
+        // create an accumulator and fold+finalize once to account for the single measure m
         IAccumulator acc = getAccumulatorFor(m, windowStart, windowSizeMillis);
         acc.fold(m);
+        acc.finalise();
         // then, wrap the accumulator in a lateRecord
         return new LateRecordAccumulator(acc.getRecord(), getDateClusteringKeyFor(windowStart, windowSizeMillis));
     }
@@ -70,7 +71,7 @@ public class AggregationConfiguration {
             return String.format("%4d-%02d", d.getYear(), d.getMonthOfYear());
         } else {
             // more than one hour: partition by slices of 6 months
-            return String.format("%4d-%02d", d.getYear(), d.getMonthOfYear() > 6 ? 1 : 12);
+            return String.format("%4d-%02d", d.getYear(), d.getMonthOfYear() <= 6 ? 1 : 12);
         }
     }
 

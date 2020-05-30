@@ -28,24 +28,20 @@ public class BasicAccumulator extends AggregationRecord implements IAccumulator 
      * The start time of the window, in milliseconds since epoch.
      */
     public long windowTime;
+    protected boolean withStdev;
+
+    public BasicAccumulator() {
+        this.withStdev = false;
+    }
 
     @Override
     public void fold(Measure m) {
-        // min
-        if (isNaN(min) || min > m.floatValue) min = m.floatValue;
-        if (isNaN(max) || max < m.floatValue) max = m.floatValue;
-        count += 1;
-        sum += m.floatValue;
-        if (lastMeasureTimestamp < m.timestamp.getTime()) {
-            lastMeasure = m.floatValue;
-            lastMeasureTimestamp = m.timestamp.getTime();
-        }
+        addValue(m.floatValue, m.timestamp.getTime(), withStdev);
     }
 
     @Override
     public void finalise() {
-        // compute the mean based on sum and count
-        updateMean();
+        computeFinalValues();
     }
 
     @Override

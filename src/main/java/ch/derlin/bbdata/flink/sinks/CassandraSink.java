@@ -61,7 +61,7 @@ public class CassandraSink extends RichSinkFunction<IAccumulator> {
     }
 
     @Override
-    public void invoke(IAccumulator iAccumulator, Context c) throws Exception {
+    public void invoke(IAccumulator iAccumulator, Context c) {
         // TODO concurrency ??
         // get the record
         AggregationRecord record = iAccumulator.getRecord();

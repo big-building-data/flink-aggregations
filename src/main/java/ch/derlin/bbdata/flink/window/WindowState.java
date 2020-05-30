@@ -4,6 +4,7 @@ import ch.derlin.bbdata.flink.AggregationConfiguration;
 import ch.derlin.bbdata.flink.accumulators.IAccumulator;
 import ch.derlin.bbdata.flink.pojo.Measure;
 import ch.derlin.bbdata.flink.utils.DateUtil;
+import org.apache.flink.api.common.time.Time;
 import org.apache.flink.util.Collector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -107,7 +108,7 @@ public class WindowState {
             }
         } else {
             // the measure is "on-time", update the timeAdvance if necessary
-            if (ts > timeAdvance) timeAdvance = key;
+            if (ts > timeAdvance) timeAdvance = ts;
         }
 
         // accumulate
@@ -138,6 +139,7 @@ public class WindowState {
      * check every open window and close/forward those whose covering a time range lesser than
      * windowSize - allowedLateness. The value of allowedLateness will determine how many windows
      * we keep in memory.
+     *
      * @param collector the collector to forward closed windows
      */
     private void finalizeOldWindows(Collector<IAccumulator> collector) {
@@ -160,6 +162,7 @@ public class WindowState {
 
     /**
      * Close all the windows currently in memory, whatever their timestamp.
+     *
      * @param collector the collector to forward measures to
      */
     public void flush(Collector<IAccumulator> collector) {
@@ -173,6 +176,6 @@ public class WindowState {
 
     @Override
     public String toString() {
-        return String.format("WindowsState{objectId=%d,windows=%d}", objectId, map.size());
+        return String.format("WindowsState{granularity=%d,objectId=%d,windows=%d}", windowSizeMillis / 60_000, objectId, map.size());
     }
 }

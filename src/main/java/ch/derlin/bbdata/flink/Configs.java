@@ -46,7 +46,7 @@ public class Configs {
     public static final ConfigOption<Long> configCheckpointsInterval = ConfigOptions
             .key("flink.checkpoints.interval")
             .longType()
-            .defaultValue(60000L)
+            .defaultValue(60_000L)
             .withDescription("Flink checkpoints frequency, in milliseconds.");
 
     public static final ConfigOption<String> configCheckpointsPath = ConfigOptions
@@ -63,7 +63,7 @@ public class Configs {
             .stringType()
             .asList()
             .noDefaultValue()
-            .withDescription("Comma-separated list of entrypoints (IP, host) to connect to Cassandra");
+            .withDescription("List of entrypoints (IP, host) to connect to Cassandra, separated by semi-colons (;).");
 
     // =============== getters
 
@@ -99,9 +99,9 @@ public class Configs {
 
     public static long readFlushEvery(Configuration config) {
         int flushEvery = config.get(configFlushEvery);
-        if (flushEvery <= 0)
+        if (flushEvery < 0)
             throw new RuntimeException(String.format(
-                    "%s (%d) should be > 0", configFlushEvery.key(), flushEvery));
+                    "%s (%d) should be >= 0", configFlushEvery.key(), flushEvery));
         return Time.minutes(flushEvery).toMilliseconds();
     }
 

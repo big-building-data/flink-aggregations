@@ -14,31 +14,9 @@ import static java.lang.Float.isNaN;
  */
 public class AdvancedAccumulator extends BasicAccumulator {
 
-
-    public void fold(Measure m) {
-        super.fold(m);
-        float v = m.floatValue;
-
-        // stdev
-        if (isNaN(k)) {
-            k = v;
-            kSum = kSumSquared = 0;
-        } else {
-            // incremental computation of the variance while avoiding catastrophic cancellation
-            // see: https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Computing_shifted_data
-            kSum += v - k;
-            kSumSquared += (v - k) * (v - k);
-        }
-
+    public AdvancedAccumulator() {
+        this.withStdev = true;
     }
-
-    @Override
-    public void finalise() {
-        super.finalise();
-        // get the standard deviation
-        updateStdDev();
-    }
-
 
     @Override
     public String toString() {
