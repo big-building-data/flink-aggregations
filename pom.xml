@@ -137,9 +137,9 @@
 
     <!-- Two available profiles. Use -P prod for running on the daplab -->
     <profiles>
-        <!-- (1) local-dev (default): for local development -->
+        <!-- (1) local (default): for local development -->
         <profile>
-            <id>local-dev</id>
+            <id>local</id>
             <activation>
                 <activeByDefault>true</activeByDefault>
             </activation>
@@ -148,9 +148,9 @@
             </properties>
         </profile>
         <!-- (2) prod: for hadoop deployment -->
-        <!-- Usage: mvn package -P prod -->
+        <!-- Usage: mvn package -P hadoop -->
         <profile>
-            <id>prod</id>
+            <id>hadoop</id>
             <properties>
                 <scope.type>provided</scope.type>
             </properties>
@@ -192,6 +192,7 @@
                             <goal>shade</goal>
                         </goals>
                         <configuration>
+                            <finalName>${project.artifactId}-${project.version}-${project.activeProfiles[0].id}</finalName>
                             <artifactSet>
                                 <excludes>
                                     <exclude>org.apache.flink:force-shading</exclude>

@@ -48,7 +48,7 @@ different properties files for each, changing AT LEAST the `window.granularity` 
 
 **IMPORTANT**: you need to build the project with the **prod Maven profile** enabled:
 
-    mvn package -P prod
+    mvn package -P hadoop
 
 To run the application on yarn, you have two options:
 
@@ -64,12 +64,12 @@ Launch a new flink session:
 
 Launch the application:
 
-    flink run flink-aggregations-*-full.jar config.properties
+    flink run flink-aggregations-*-hadoop.jar config.properties
 
 
 ### Running in standalone mode
 
-    flink run -d --yarnstreaming --jobmanager yarn-cluster -yn 1 -j flink-aggregations-*-full.jar \
+    flink run -d --yarnstreaming --jobmanager yarn-cluster -yn 1 -j flink-aggregations-*-hadoop.jar \
         -c ch.derlin.bbdata.flink.Main config.properties
 
 ### Realtime logging with rsyslog
