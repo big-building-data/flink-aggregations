@@ -1,25 +1,31 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>ch.derlin.bbdata.flink</groupId>
     <artifactId>flink-aggregations</artifactId>
     <version>0.0.3</version>
+    <packaging>jar</packaging>
+
+    <name>BBData: Flink Aggregations</name>
+    <url>https://github.com/big-building-data/flink-aggregations</url>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <jdk.version>1.8</jdk.version>
         <flink.version>1.10.0</flink.version>
+        <java.version>1.8</java.version>
+        <scala.binary.version>2.11</scala.binary.version>
+        <maven.compiler.source>${java.version}</maven.compiler.source>
+        <maven.compiler.target>${java.version}</maven.compiler.target>
+
         <mysql.version>6.0.2</mysql.version>
         <slf4j.version>1.7.21</slf4j.version>
-        <bbdata.commons.version>0.0.2</bbdata.commons.version>
-        <cassandra.version>3.1.0</cassandra.version>
+        <cassandra.version>3.9.0</cassandra.version>
     </properties>
 
     <dependencies>
-        <!--flink-->
+        <!-- Apache Flink dependencies -->
+        <!-- These dependencies should not be packaged into the JAR file. -->
         <dependency>
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-java</artifactId>
@@ -28,41 +34,73 @@
         </dependency>
         <dependency>
             <groupId>org.apache.flink</groupId>
-            <artifactId>flink-streaming-java_2.11</artifactId>
+            <artifactId>flink-streaming-java_${scala.binary.version}</artifactId>
             <version>${flink.version}</version>
             <scope>${scope.type}</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.flink</groupId>
-            <artifactId>flink-clients_2.11</artifactId>
-            <version>${flink.version}</version>
-            <scope>${scope.type}</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.flink</groupId>
-            <artifactId>flink-connector-wikiedits_2.11</artifactId>
-            <version>${flink.version}</version>
-            <scope>${scope.type}</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.flink</groupId>
-            <artifactId>flink-connector-kafka-0.10_2.11</artifactId>
-            <version>${flink.version}</version>
         </dependency>
 
-        <!--cassandra-->
-        <!-- see profiles for datastax deps -->
+
+        <!-- Connector dependencies -->
+        <!-- They must be in the default scope (compile). -->
 
         <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-            <version>19.0</version>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>flink-connector-kafka-0.10_${scala.binary.version}</artifactId>
+            <version>${flink.version}</version>
+            <!-- I exclude lz4 because it is also present in cassandra-driver-mapping -->
+            <!-- This avoids "overlapping" errors in goal shade -->
+            <exclusions>
+                <exclusion>
+                    <groupId>net.jpountz.lz4</groupId>
+                    <artifactId>lz4</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <!-- Cassandra driver+mapper -->
+        <!-- We need to avoid conflicts of org.netty when running on Hadoop -->
+        <!-- https://docs.datastax.com/en/developer/java-driver/3.9/manual/shaded_jar/ -->
+        <dependency>
+            <groupId>com.datastax.cassandra</groupId>
+            <artifactId>cassandra-driver-core</artifactId>
+            <version>${cassandra.version}</version>
+            <classifier>shaded</classifier>
+            <exclusions>
+                <exclusion>
+                    <groupId>io.netty</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
-            <groupId>com.codahale.metrics</groupId>
-            <artifactId>metrics-core</artifactId>
-            <version>3.0.2</version>
+            <groupId>com.datastax.cassandra</groupId>
+            <artifactId>cassandra-driver-mapping</artifactId>
+            <version>${cassandra.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.datastax.cassandra</groupId>
+                    <artifactId>cassandra-driver-core</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
+
+        <!-- Add logging framework, to produce console output when running in the IDE. -->
+        <!-- These dependencies are excluded from the application JAR by default. -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+            <version>1.7.7</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <version>1.2.17</version>
+            <scope>runtime</scope>
+        </dependency>
+
+
+        <!-- Other, regular dependencies -->
 
         <!--mysql-->
         <dependency>
@@ -75,38 +113,31 @@
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
-            <version>2.5</version>
+            <version>2.8.0</version>
         </dependency>
 
-        <!--logging-->
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-            <version>${slf4j.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
-            <version>${slf4j.version}</version>
-        </dependency>
+        <!--Joda datetime-->
         <dependency>
             <groupId>joda-time</groupId>
             <artifactId>joda-time</artifactId>
             <version>2.9.4</version>
         </dependency>
 
-        <!--test-->
+        <!-- Testing -->
+        <!-- Add Junit 5 for tests -->
+
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
-            <version>RELEASE</version>
+            <version>[5.6.0,)</version>
             <scope>test</scope>
         </dependency>
-
     </dependencies>
 
+
+    <!-- Two available profiles. Use -P prod for running on the daplab -->
     <profiles>
+        <!-- (1) local-dev (default): for local development -->
         <profile>
             <id>local-dev</id>
             <activation>
@@ -115,108 +146,74 @@
             <properties>
                 <scope.type>compile</scope.type>
             </properties>
-            <dependencies>
-                <!-- regular cassandra: no exclusion -->
-                <dependency>
-                    <groupId>com.datastax.cassandra</groupId>
-                    <artifactId>cassandra-driver-core</artifactId>
-                    <version>${cassandra.version}</version>
-                </dependency>
-                <dependency>
-                    <groupId>com.datastax.cassandra</groupId>
-                    <artifactId>cassandra-driver-mapping</artifactId>
-                    <version>${cassandra.version}</version>
-                </dependency>
-            </dependencies>
         </profile>
-
+        <!-- (2) prod: for hadoop deployment -->
+        <!-- Usage: mvn package -P prod -->
         <profile>
             <id>prod</id>
             <properties>
                 <scope.type>provided</scope.type>
             </properties>
-            <dependencies>
-                <!--avoid "java.lang.ClassCastException: io.netty.channel.epoll.EpollEventLoopGroup cannot be cast to
-                io.netty.channel.EventLoopGroup" by excluding io.netty -->
-                <!--see https://es.coredump.biz/questions/48762857/javalangclasscastexception-netty-fail-on-jar-execution-on-flink-->
-                <dependency>
-                    <groupId>com.datastax.cassandra</groupId>
-                    <artifactId>cassandra-driver-core</artifactId>
-                    <version>${cassandra.version}</version>
-                    <exclusions>
-                        <exclusion>
-                            <groupId>io.netty</groupId>
-                            <artifactId>*</artifactId>
-                        </exclusion>
-                    </exclusions>
-                </dependency>
-                <dependency>
-                    <groupId>com.datastax.cassandra</groupId>
-                    <artifactId>cassandra-driver-mapping</artifactId>
-                    <version>${cassandra.version}</version>
-                    <!--avoid "java.lang.ClassCastException: io.netty.channel.epoll.EpollEventLoopGroup cannot be cast to
-                    io.netty.channel.EventLoopGroup"-->
-                    <!--see https://es.coredump.biz/questions/48762857/javalangclasscastexception-netty-fail-on-jar-execution-on-flink-->
-                    <exclusions>
-                        <exclusion>
-                            <groupId>io.netty</groupId>
-                            <artifactId>*</artifactId>
-                        </exclusion>
-                    </exclusions>
-                </dependency>
-            </dependencies>
         </profile>
     </profiles>
 
     <build>
         <plugins>
+
+            <!-- Java Compiler -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.5.1</version>
+                <version>3.1</version>
                 <configuration>
-                    <source>${jdk.version}</source>
-                    <target>${jdk.version}</target>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
                 </configuration>
             </plugin>
 
-            <!--maven shade: fatJar and relocation-->
+            <!-- JUnit 5 Running integration (necessary for parameterized tests) -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.0.0-M4</version>
+            </plugin>
+
+            <!-- We use the maven-shade plugin to create a fat jar that contains all necessary dependencies. -->
+            <!-- Change the value of <mainClass>...</mainClass> if your program entry point changes. -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>3.0.0</version>
-                <configuration>
-                    <createDependencyReducedPom>true</createDependencyReducedPom>
-                    <minimizeJar>false</minimizeJar>
-                    <finalName>${project.artifactId}-${project.version}-full</finalName>
-                </configuration>
+                <version>3.1.1</version>
                 <executions>
+                    <!-- Run shade goal on package phase -->
                     <execution>
                         <phase>package</phase>
                         <goals>
                             <goal>shade</goal>
                         </goals>
                         <configuration>
-                            <relocations>
-                                <!--
-                                Necessary for com.google.guava:
-                                Rename classes in com.google to shaded.com.google and package them all in the JAR
-                                It is necessary because older external JAR used by Hadoop are in the classpath and
-                                used instead of the one we need.
-
-                                For more information about relocation:
-                                https://maven.apache.org/plugins/maven-shade-plugin/examples/class-relocation.html
-                                -->
-                                <relocation>
-                                    <pattern>com.google</pattern>
-                                    <shadedPattern>shaded.com.google</shadedPattern>
-                                </relocation>
-                            </relocations>
+                            <artifactSet>
+                                <excludes>
+                                    <exclude>org.apache.flink:force-shading</exclude>
+                                    <exclude>com.google.code.findbugs:jsr305</exclude>
+                                    <exclude>org.slf4j:*</exclude>
+                                    <exclude>log4j:*</exclude>
+                                </excludes>
+                            </artifactSet>
+                            <filters>
+                                <filter>
+                                    <!-- Do not copy the signatures in the META-INF folder.
+                                    Otherwise, this might cause SecurityExceptions when using the JAR. -->
+                                    <artifact>*:*</artifact>
+                                    <excludes>
+                                        <exclude>META-INF/*.SF</exclude>
+                                        <exclude>META-INF/*.DSA</exclude>
+                                        <exclude>META-INF/*.RSA</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
                             <transformers>
-                                <transformer
-                                        implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
-                                <transformer
-                                        implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <mainClass>ch.derlin.bbdata.flink.Main</mainClass>
                                 </transformer>
                             </transformers>
@@ -224,8 +221,7 @@
                     </execution>
                 </executions>
             </plugin>
-
         </plugins>
-    </build>
 
+    </build>
 </project>

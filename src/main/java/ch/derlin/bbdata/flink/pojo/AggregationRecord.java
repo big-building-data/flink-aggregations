@@ -181,8 +181,8 @@ public class AggregationRecord {
         return "AggregationRecord{" +
                 "minutes=" + minutes +
                 ", objectId=" + objectId +
-                ", date='" + DateUtil.dateToString(timestamp) +
-                ", timestamp=" + timestamp +
+                ", date='" + date +
+                ", timestamp=" + DateUtil.dateToString(timestamp) +
                 ", count=" + count +
                 '}';
     }
