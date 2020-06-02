@@ -39,13 +39,13 @@ import static org.apache.flink.streaming.api.environment.CheckpointConfig.Extern
 public class Main {
 
     private static String UID_PREFIX = "ch.derlin.bbdata.flink.custom.window.";
-    private static final Logger LOGGER = LoggerFactory.getLogger(Main.class);
+    private static final Logger LOG = LoggerFactory.getLogger(Main.class);
 
 
     public static void main(String[] args) throws Exception {
 
         if (args.length < 1) {
-            LOGGER.error("missing property file as first argument");
+            LOG.error("missing property file as first argument");
             System.exit(1);
         }
 
@@ -54,12 +54,12 @@ public class Main {
 
             // get path to configuration file
             Path configPath = Paths.get(args[0]);
-            LOGGER.info("Loading properties from file: {}", configPath);
+            LOG.info("Loading properties from file: {}", configPath);
 
             // read config file and convert it to a flink configuration
             ParameterTool parameters = ParameterTool.fromPropertiesFile(configPath.toAbsolutePath().toString());
             Configuration config = parameters.getConfiguration();
-            LOGGER.info("properties: {}", parameters.toMap());
+            LOG.info("properties: {}", parameters.toMap());
 
             // ensure properties are ok
             Configs.checkConfig(config);
@@ -105,7 +105,7 @@ public class Main {
             env.getConfig().setGlobalJobParameters(parameters.getConfiguration());
             env.execute(String.format("bbdata-aggregation (granularity=%d)", granularityMinutes));
         } catch (Exception e) {
-            LOGGER.error("{}", e);
+            LOG.error("{}", e);
             throw e;
         }
     }//end main

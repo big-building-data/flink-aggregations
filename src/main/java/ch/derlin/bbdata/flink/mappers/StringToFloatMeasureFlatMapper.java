@@ -1,7 +1,6 @@
 package ch.derlin.bbdata.flink.mappers;
 
 import ch.derlin.bbdata.flink.AggregationConfiguration;
-import ch.derlin.bbdata.flink.Main;
 import ch.derlin.bbdata.flink.pojo.Measure;
 import ch.derlin.bbdata.flink.utils.DateUtil;
 import com.google.gson.Gson;
@@ -24,25 +23,27 @@ import org.slf4j.LoggerFactory;
  */
 public class StringToFloatMeasureFlatMapper extends RichFlatMapFunction<String, Measure> {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(Main.class);
+    private static final Logger LOG = LoggerFactory.getLogger(StringToFloatMeasureFlatMapper.class);
     private transient Gson gson;
 
     @Override
-    public void flatMap(String s, Collector<Measure> collector) throws Exception {
+    public void flatMap(String s, Collector<Measure> collector) {
         try {
             Measure m = gson.fromJson(s, Measure.class);
             if (AggregationConfiguration.isAggregationTarget(m)) {
                 m.floatValue = Float.parseFloat(m.value);
-                if (!Float.isNaN(m.floatValue))
+                if (Float.isNaN(m.floatValue))
+                    LOG.warn("NaN encountered. Measure='{}'", s);
+                else
                     collector.collect(m);
             }
         } catch (Exception e) {
-            LOGGER.error("deserializing '{}'  ", s, e);
+            LOG.error("{}: {}. Measure='{}'  ", e.getClass().getName(), e.getMessage(), s);
         }
     }
 
     @Override
-    public void open(Configuration parameters) throws Exception {
+    public void open(Configuration parameters) {
         // serializeSpecialFloatingPointValues makes gson handle NaNs, Infinity and special values
         // see https://google.github.io/gson/apidocs/com/google/gson/GsonBuilder.html#serializeSpecialFloatingPointValues--
         DateUtil.setDefaultToUTC();

@@ -7,8 +7,6 @@ import ch.derlin.bbdata.flink.utils.DateUtil;
 
 import java.util.Date;
 
-import static java.lang.Float.isNaN;
-
 /**
  * The accumulator will always compute:
  * <ul>

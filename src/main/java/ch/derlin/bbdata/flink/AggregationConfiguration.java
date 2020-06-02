@@ -19,7 +19,7 @@ import static ch.derlin.bbdata.flink.utils.DateUtil.ms2Minutes;
  */
 public class AggregationConfiguration {
 
-    // filtering
+    // filtering TODO: why ???
     public static final List<String> BASIC_AGGR_UNITS = Arrays.asList("lx,m/s".split(","));
     public static final List<String> ADVANCED_AGGR_UNITS = Arrays.asList("%,A,ppm,V,W,°C".split(","));
 

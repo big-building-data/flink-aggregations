@@ -22,7 +22,7 @@ import org.slf4j.LoggerFactory;
  */
 public class CassandraSink extends RichSinkFunction<IAccumulator> {
 
-    protected static final Logger LOGGER = LoggerFactory.getLogger(CassandraSink.class);
+    protected static final Logger LOG = LoggerFactory.getLogger(CassandraSink.class);
 
     // transient properties are never serialized. Each node will recreate them
     // in the open/close methods of the RichSinkFunction interface
@@ -55,7 +55,7 @@ public class CassandraSink extends RichSinkFunction<IAccumulator> {
             mapper = manager.mapper(AggregationRecord.class);
 
         } catch (Exception e) {
-            LOGGER.error("setup/open failed", e);
+            LOG.error("setup/open failed", e);
             throw e;
         }
     }
@@ -72,7 +72,7 @@ public class CassandraSink extends RichSinkFunction<IAccumulator> {
             // there is already a record for this window in cassandra
             if (iAccumulator instanceof LateRecordAccumulator) {
                 // this is a late record, i.e. a single entry => update the stats in cassandra
-                LOGGER.debug("UPDATE => record={} | acc={}", oldRecord, iAccumulator);
+                LOG.debug("UPDATE => record={} | acc={}", oldRecord, iAccumulator);
                 oldRecord.addOne(record);
                 mapper.save(oldRecord);
             } else {
@@ -80,17 +80,17 @@ public class CassandraSink extends RichSinkFunction<IAccumulator> {
                 // without a saved state => replace the record already in cassandra only if this
                 // record has more measures
                 if (oldRecord.count < record.count) {
-                    LOGGER.debug("OVERRIDE => overriding: old={} | new={}", oldRecord, record);
+                    LOG.debug("OVERRIDE => overriding: old={} | new={}", oldRecord, record);
                     mapper.save(record);
                 } else {
-                    LOGGER.debug("OVERRIDE => skipping: old={} | new={}", oldRecord, record);
+                    LOG.debug("OVERRIDE => skipping: old={} | new={}", oldRecord, record);
                 }
             }
         } else {
             // simply save the new record
             if (iAccumulator instanceof LateRecordAccumulator) {
                 // first time we see this, so we need to un-NaN the k, k_sum etc. fields
-                LOGGER.debug("FIRST as late => record={}", record);
+                LOG.debug("FIRST as late => record={}", record);
             }
             mapper.save(record);
         }

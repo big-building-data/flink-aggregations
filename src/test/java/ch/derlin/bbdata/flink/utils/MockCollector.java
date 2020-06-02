@@ -1,6 +1,5 @@
 package ch.derlin.bbdata.flink.utils;
 
-import ch.derlin.bbdata.flink.accumulators.IAccumulator;
 import org.apache.flink.util.Collector;
 
 import java.util.ArrayList;

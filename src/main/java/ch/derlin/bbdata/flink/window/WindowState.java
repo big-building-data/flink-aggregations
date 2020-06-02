@@ -4,7 +4,6 @@ import ch.derlin.bbdata.flink.AggregationConfiguration;
 import ch.derlin.bbdata.flink.accumulators.IAccumulator;
 import ch.derlin.bbdata.flink.pojo.Measure;
 import ch.derlin.bbdata.flink.utils.DateUtil;
-import org.apache.flink.api.common.time.Time;
 import org.apache.flink.util.Collector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -154,7 +153,7 @@ public class WindowState {
                 acc.finalise();
                 collector.collect(acc);
                 map.remove(key);
-                LOG.trace("finalized window '{}'", acc);
+                LOG.debug("finalized window '{}'", acc);
             }
         }//end for
         LOG.trace("cleanup: {}", this);
@@ -169,7 +168,7 @@ public class WindowState {
         for (IAccumulator accumulator : map.values()) {
             accumulator.finalise();
             collector.collect(accumulator);
-            LOG.trace("cleanup window '{}'", accumulator);
+            LOG.debug("flushed window '{}'", accumulator);
         }
         map.clear();
     }
