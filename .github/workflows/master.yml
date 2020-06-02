@@ -29,16 +29,19 @@ jobs:
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
           
-      - name: Build and test local jar
-        run: mvn -B package
+      - name: Run tests
+        run: mvn -B test
       
+      - name: Build local jar
+        run:  mvn package -Dmaven.test.skip=true
+        
       - name: Build hadoop jar
-        run:  mvn package -P hadoop -Dmaven.test.skip=true
+        run:  mvn package -Dmaven.test.skip=true -P hadoop
         
       - name: Prepare artifacts
         run: |
           mkdir -p artifacts 
-          cp target/flink-aggregations*.jar artifacts
+          cp target/flink-aggregations-*-*.jar artifacts
           
         
       - name: Upload artifacts
