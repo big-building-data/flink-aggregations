@@ -30,7 +30,7 @@ export LD_LIBRARY_PATH=/usr/hdp/current/hadoop-client/lib/native:$LD_LIBRARY_PAT
 
 ## current directory and usual jar location
 CURRENT_DIR="$(dirname "$(readlink -f "$0/..")")"
-JAR="$CURRENT_DIR/target/flink-aggregations-*-full.jar"
+JAR="$CURRENT_DIR/target/flink-aggregations-*-hadoop.jar"
 
 ## session and job parameters
 # session arguments: detached mode (-d), 1 taskmanager (-n), 4 slots (-s),
