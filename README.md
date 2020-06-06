@@ -1,3 +1,5 @@
+![Build](https://github.com/big-building-data/flink-aggregations/workflows/Java%20CI%20with%20Maven/badge.svg)
+
 # Flink Aggregations Application
 
 This repository implements the aggregations processor for BBData measures. It implements a custom windowing system for aggregations with a granularity of several minutes to several hours.
@@ -55,6 +57,7 @@ To run the application on yarn, you have two options:
 1. launch a new flink session and run the application(s) in the session
 2. launch the application(s) in standalone mode
 
+The `run-hadoop.sh` can help you do everything easily (using option 1).
 
 ### Running inside a flink session
 

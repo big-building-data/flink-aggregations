@@ -6,6 +6,17 @@
 # ----------------------------------------
 #
 # Helper script to launch a yarn-session and the flink-aggregations application.
+# This script assumes the following:
+#  - flink-1.10.1 located in /opt/flink
+#  - config-quarters.properties and config-hours.properties present in the same folder
+#  - jar built for hadoop located in target/
+#
+# How to use:
+#  - run with arguments "start session" to spawn a new flink session on yarn,
+#  - run with arguments "start hours|quarters [savepoint]" to launch the aggregations,
+#  - run with arguments "session-id" to get the current application_id of the session.
+#
+# Yarn and flink tips:
 #
 # To kill a yarn-session:
 #    yarn application -kill <application_id>
@@ -18,19 +29,20 @@
 #     flink run -s <savepoint directory>
 ####
 
+CURRENT_DIR="$(dirname "$(readlink -f "$0/..")")"
+
 ## flink location
-flink_base="/opt/flink/flink-1.10.1"
+flink_base="/opt/flink/flink-1.10.1" # TODO: update if needed
 export PATH="$flink_base/bin:$PATH"
 
 ## common environment variables needed by flink
 export HADOOP_CONF_DIR=/etc/hadoop/conf
 export YARN_CONF_DIR=/etc/hadoop/conf
 export HADOOP_CLASSPATH=$(hadoop classpath)
-export LD_LIBRARY_PATH=/usr/hdp/current/hadoop-client/lib/native:$LD_LIBRARY_PATH # TODO: change if not on the daplab
+export LD_LIBRARY_PATH=/usr/hdp/current/hadoop-client/lib/native:$LD_LIBRARY_PATH # TODO: change if not on Confluent
 
 ## current directory and usual jar location
-CURRENT_DIR="$(dirname "$(readlink -f "$0/..")")"
-JAR="$CURRENT_DIR/target/flink-aggregations-*-hadoop.jar"
+JAR="$CURRENT_DIR/target/flink-aggregations-*-hadoop.jar" # TODO: update if needed
 
 ## session and job parameters
 # session arguments: detached mode (-d), 1 taskmanager (-n), 4 slots (-s),
