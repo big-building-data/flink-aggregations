@@ -4,7 +4,7 @@
 
     <groupId>ch.derlin.bbdata.flink</groupId>
     <artifactId>flink-aggregations</artifactId>
-    <version>0.0.3</version>
+    <version>2.0.0-alpha</version>
     <packaging>jar</packaging>
 
     <name>BBData: Flink Aggregations</name>
