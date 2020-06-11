@@ -44,7 +44,7 @@ export LD_LIBRARY_PATH=/usr/hdp/current/hadoop-client/lib/native:$LD_LIBRARY_PAT
 ## current directory and usual jar location
 JAR="$CURRENT_DIR/target/flink-aggregations-*-hadoop.jar" # TODO: update if needed
 
-## session and job parameters
+## session and job parameters
 # session arguments: detached mode (-d), 1 taskmanager (-n), 4 slots (-s),
 #   1024M for the jobmanager memory (-jm), 2048M for the taskmanager memory (-tm)
 #OLD YARN_SESSION_ARGUMENTS="-d -n 1 -s 4 -jm 1024 -tm 2048 --name flink-agg-session"
@@ -55,6 +55,11 @@ FLINK_RUN_ARGUMENTS="-d"
 # display the application_id of the yarn-session, if any
 function get_session_id() {
     yarn application -list 2>&1 | grep "Flink session" | awk '{print $1}'
+}
+
+# list currently running flink jobs
+function list_jobs() {
+    flink list 2>&1 | grep -E '[0-9a-f]{32}'
 }
 
 # if a yarn-session is already running, display its application_id.
@@ -133,10 +138,14 @@ start)
 session-id)
     get_session_id
     ;;
+list)
+    list_jobs
+    ;;
 *)
     echo "usage:"
     echo " start <session|hours|quarters>"
     echo " start job <jar> <config> [<savepoint>]"
     echo " session-id"
+    echo " list"
     ;;
 esac
