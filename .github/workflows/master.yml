@@ -50,7 +50,7 @@ jobs:
           path: artifacts/*.*
 
       - name: Update nightly release
-        uses: derlin/tip@master
+        uses: eine/tip@master
         with:
           tag: nightly
           rm: true
