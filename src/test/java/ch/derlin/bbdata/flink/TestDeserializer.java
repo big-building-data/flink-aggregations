@@ -41,8 +41,7 @@ public class TestDeserializer implements TestUTC {
     })
     public void testDeserializeFloats(float value, String timestamp, long expectedTs) throws Exception {
         MockCollector<Measure> collector = new MockCollector<>();
-        StringToFloatMeasureFlatMapper mapper = new StringToFloatMeasureFlatMapper();
-        mapper.open(new Configuration());
+        StringToFloatMeasureFlatMapper mapper = getMapper();
 
         assertDoesNotThrow(() -> mapper.flatMap(getMeasureString(Float.toString(value), timestamp), collector));
         assertEquals(1, collector.size());
@@ -55,8 +54,7 @@ public class TestDeserializer implements TestUTC {
     @Test
     public void testDeserializeNonFloat() throws Exception {
         MockCollector<Measure> collector = new MockCollector<>();
-        StringToFloatMeasureFlatMapper mapper = new StringToFloatMeasureFlatMapper();
-        mapper.open(new Configuration());
+        StringToFloatMeasureFlatMapper mapper = getMapper();
 
         for (String v : new String[]{"true", "false", "NaN", "", "on", "1.2.2"})
             assertDoesNotThrow(() -> mapper.flatMap(getMeasureString(v, "2020-01-01T00:00:00Z"), collector));
@@ -67,13 +65,20 @@ public class TestDeserializer implements TestUTC {
     @Test
     public void testDeserializeWrongTimestamp() throws Exception {
         MockCollector<Measure> collector = new MockCollector<>();
-        StringToFloatMeasureFlatMapper mapper = new StringToFloatMeasureFlatMapper();
-        mapper.open(new Configuration());
+        StringToFloatMeasureFlatMapper mapper = getMapper();
 
         for (String ts : new String[]{"2020", "2020-31-12T10:00Z", "", "Z", "1900Z", "0000-00-00T00:00Z"})
             assertDoesNotThrow(() -> mapper.flatMap(getMeasureString("1.2", ts), collector));
 
         assertEquals(0, collector.size());
+    }
+
+    private StringToFloatMeasureFlatMapper getMapper() {
+        StringToFloatMeasureFlatMapper mapper = new StringToFloatMeasureFlatMapper();
+        Configuration config = new Configuration();
+        config.setBoolean(Configs.TESTING_FLAG, true);
+        mapper.open(config);
+        return mapper;
     }
 
 }

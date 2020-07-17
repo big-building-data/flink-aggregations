@@ -14,6 +14,11 @@ import java.util.List;
  */
 public class Configs {
 
+    public static final ConfigOption<Boolean> TESTING_FLAG = ConfigOptions
+            .key("BB_is-testing")
+            .booleanType()
+            .defaultValue(false);
+
     // =============== windowing options
 
     public static final ConfigOption<Integer> configGranularity = ConfigOptions

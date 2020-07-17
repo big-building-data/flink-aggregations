@@ -11,6 +11,7 @@ import com.datastax.driver.core.policies.DefaultRetryPolicy;
 import com.datastax.driver.mapping.Mapper;
 import com.datastax.driver.mapping.MappingManager;
 import org.apache.flink.configuration.Configuration;
+import org.apache.flink.metrics.Counter;
 import org.apache.flink.streaming.api.functions.sink.RichSinkFunction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,6 +30,11 @@ public class CassandraSink extends RichSinkFunction<IAccumulator> {
     protected transient Cluster cluster;
     protected transient Session session;
     protected transient Mapper<AggregationRecord> mapper;
+
+    // metrics
+    private transient Counter normalCounter,
+            lateCounter, lateUpdateCounter, lateFirstCounter,
+            overrideCounter, skipCounter;
 
     @Override
     public void open(Configuration parameters) throws Exception {
@@ -58,6 +64,22 @@ public class CassandraSink extends RichSinkFunction<IAccumulator> {
             LOG.error("setup/open failed", e);
             throw e;
         }
+
+        // setup metrics
+        // (no prefix, as 0.Sink__CassandraSink will be added automatically
+
+        // number of "normal cases"
+        normalCounter = getRuntimeContext().getMetricGroup().counter("rec_normal");
+        // number of late record, whether a previous record exist or not
+        lateCounter = getRuntimeContext().getMetricGroup().counter("rec_late");
+        // number of late records, no previous window existed
+        lateFirstCounter = getRuntimeContext().getMetricGroup().counter("rec_late_first");
+        // number of late records, where a previous window existed (hence is updated)
+        lateUpdateCounter = getRuntimeContext().getMetricGroup().counter("rec_late_update");
+        // number of records where a previous window existed and this new records overrode
+        overrideCounter = getRuntimeContext().getMetricGroup().counter("rec_override");
+        // number of records where a previous window existed and this record was skipped
+        skipCounter = getRuntimeContext().getMetricGroup().counter("rec_skip");
     }
 
     @Override
@@ -72,7 +94,11 @@ public class CassandraSink extends RichSinkFunction<IAccumulator> {
             // there is already a record for this window in cassandra
             if (iAccumulator instanceof LateRecordAccumulator) {
                 // this is a late record, i.e. a single entry => update the stats in cassandra
+                // update counters
                 LOG.debug("UPDATE => record={} | acc={}", oldRecord, iAccumulator);
+                lateCounter.inc();
+                lateUpdateCounter.inc();
+                // update record
                 oldRecord.addOne(record);
                 mapper.save(oldRecord);
             } else {
@@ -81,16 +107,22 @@ public class CassandraSink extends RichSinkFunction<IAccumulator> {
                 // record has more measures
                 if (oldRecord.count < record.count) {
                     LOG.debug("OVERRIDE => overriding: old={} | new={}", oldRecord, record);
+                    overrideCounter.inc();
                     mapper.save(record);
                 } else {
                     LOG.debug("OVERRIDE => skipping: old={} | new={}", oldRecord, record);
+                    skipCounter.inc();
                 }
             }
         } else {
             // simply save the new record
             if (iAccumulator instanceof LateRecordAccumulator) {
-                // first time we see this, so we need to un-NaN the k, k_sum etc. fields
+                // first time we see this
                 LOG.debug("FIRST as late => record={}", record);
+                lateCounter.inc();
+                lateFirstCounter.inc();
+            } else {
+                normalCounter.inc();
             }
             mapper.save(record);
         }

@@ -1,12 +1,14 @@
 package ch.derlin.bbdata.flink.mappers;
 
 import ch.derlin.bbdata.flink.AggregationConfiguration;
+import ch.derlin.bbdata.flink.Configs;
 import ch.derlin.bbdata.flink.pojo.Measure;
 import ch.derlin.bbdata.flink.utils.DateUtil;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.apache.flink.api.common.functions.RichFlatMapFunction;
 import org.apache.flink.configuration.Configuration;
+import org.apache.flink.metrics.Counter;
 import org.apache.flink.util.Collector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,16 +28,24 @@ public class StringToFloatMeasureFlatMapper extends RichFlatMapFunction<String, 
     private static final Logger LOG = LoggerFactory.getLogger(StringToFloatMeasureFlatMapper.class);
     private transient Gson gson;
 
+    // metrics
+    private transient Counter inCounter, outCounter, nanCounter;
+    private transient boolean isTesting;
+
     @Override
     public void flatMap(String s, Collector<Measure> collector) {
         try {
+            if (!isTesting) inCounter.inc();
             Measure m = gson.fromJson(s, Measure.class);
             if (AggregationConfiguration.isAggregationTarget(m)) {
                 m.floatValue = Float.parseFloat(m.value);
-                if (Float.isNaN(m.floatValue))
+                if (Float.isNaN(m.floatValue)) {
+                    if (!isTesting) nanCounter.inc();
                     LOG.warn("NaN encountered. Measure='{}'", s);
-                else
+                } else {
+                    if (!isTesting) outCounter.inc();
                     collector.collect(m);
+                }
             }
         } catch (Exception e) {
             LOG.error("{}: {}. Measure='{}'  ", e.getClass().getName(), e.getMessage(), s);
@@ -48,5 +58,15 @@ public class StringToFloatMeasureFlatMapper extends RichFlatMapFunction<String, 
         // see https://google.github.io/gson/apidocs/com/google/gson/GsonBuilder.html#serializeSpecialFloatingPointValues--
         DateUtil.setDefaultToUTC();
         gson = new GsonBuilder().serializeSpecialFloatingPointValues().create();
+
+        isTesting = parameters.getBoolean(Configs.TESTING_FLAG);
+
+        if (!isTesting) {
+            // setup metrics only if we actually have a runtime context
+            inCounter = getRuntimeContext().getMetricGroup().counter("deserializer.records.in");
+            outCounter = getRuntimeContext().getMetricGroup().counter("deserializer.records.out");
+            nanCounter = getRuntimeContext().getMetricGroup().counter("deserializer.records.NaN");
+        }
     }
+
 }
