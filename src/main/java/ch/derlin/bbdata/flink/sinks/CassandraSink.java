@@ -6,6 +6,7 @@ import ch.derlin.bbdata.flink.accumulators.LateRecordAccumulator;
 import ch.derlin.bbdata.flink.pojo.AggregationRecord;
 import ch.derlin.bbdata.flink.utils.DateUtil;
 import com.datastax.driver.core.Cluster;
+import com.datastax.driver.core.QueryOptions;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.policies.DefaultRetryPolicy;
 import com.datastax.driver.mapping.Mapper;
@@ -15,6 +16,8 @@ import org.apache.flink.metrics.Counter;
 import org.apache.flink.streaming.api.functions.sink.RichSinkFunction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static com.datastax.driver.mapping.Mapper.Option.consistencyLevel;
 
 /**
  * date: 10.03.17
@@ -48,17 +51,25 @@ public class CassandraSink extends RichSinkFunction<IAccumulator> {
                     // TODO does it improve performances ?
                     ;
             for (String address : Configs.readCassandraEntrypoints(config)) {
+                LOG.info("adding cassandra contact point: " + address.trim());
                 builder.addContactPoint(address.trim());
             }
 
+            // set consistency
+            QueryOptions queryOptions = new QueryOptions();
+            queryOptions.setConsistencyLevel(Configs.readCassandraConsistency(config));
+
             // the keyspace and tables are declared in the AggregationRecord class
             // so here, just create a connection
-            cluster = builder.build();
+            cluster = builder
+                    .withQueryOptions(queryOptions)
+                    .build();
             session = cluster.connect();
 
             // the mapper will do the mapping between cassandra records and AggregationRecord objects
             MappingManager manager = new MappingManager(session);
             mapper = manager.mapper(AggregationRecord.class);
+
 
         } catch (Exception e) {
             LOG.error("setup/open failed", e);

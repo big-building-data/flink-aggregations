@@ -19,11 +19,7 @@ import static java.lang.Float.isNaN;
  *
  * @author Lucy Linder <lucy.derlin@gmail.com>
  */
-@Table(keyspace = "bbdata2", name = "aggregations",
-        readConsistency = "QUORUM",
-        writeConsistency = "QUORUM",
-        caseSensitiveKeyspace = false,
-        caseSensitiveTable = false)
+@Table(keyspace = "bbdata2", name = "aggregations")
 public class AggregationRecord {
 
     @PartitionKey(0)

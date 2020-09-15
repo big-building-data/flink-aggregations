@@ -3,7 +3,7 @@
 # =====
 # configuration for communicating with Kafka
 #
-# the brokers address:port, comma-separated
+# the brokers address:port, separated by ;
 kafka.brokers=localhost:6667
 # the source topic, with the augmented values
 kafka.augmentation=bbdata2-augmented
@@ -17,8 +17,11 @@ kafka.consumer.group=flink-aggregation-01
 # configuration for saving aggregations to cassandra.
 # the cassandra instance should have a table bbdata2.aggregations table !
 #
-# the cassandra entrypoints, a list of ip addresses separated by comma
+# the cassandra entrypoints, a list of ip addresses separated by ;
 cassandra.entrypoints=127.0.0.1
+# the cassandra consistency level to use. See enum com.datastax.driver.core.ConsistencyLevel
+# NOTE: if you have only one cassandra instance, ensure you set it to ONE !
+cassandra.consistency=QUORUM
 
 # Flink checkpoints
 # =================

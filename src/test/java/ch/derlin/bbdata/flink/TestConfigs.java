@@ -119,4 +119,17 @@ public class TestConfigs {
         assertEquals(2, Configs.readCassandraEntrypoints(config).size());
 
     }
+
+
+    @Test
+    public void testCassandraConsistency(){
+        Configuration config = new Configuration();
+        assertDoesNotThrow(() -> Configs.readCassandraConsistency(config));
+
+        config.setString(Configs.configConsistency.key(), "ONE");
+        assertDoesNotThrow(() -> Configs.readCassandraConsistency(config));
+
+        config.setString(Configs.configConsistency.key(), "LALA");
+        assertThrows(Exception.class, () -> Configs.readCassandraConsistency(config));
+    }
 }

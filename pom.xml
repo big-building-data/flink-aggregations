@@ -12,13 +12,12 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <flink.version>1.10.0</flink.version>
+        <flink.version>1.10.2</flink.version>
         <java.version>1.8</java.version>
         <scala.binary.version>2.11</scala.binary.version>
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
 
-        <mysql.version>6.0.2</mysql.version>
         <slf4j.version>1.7.21</slf4j.version>
         <cassandra.version>3.9.0</cassandra.version>
     </properties>
@@ -101,13 +100,6 @@
 
 
         <!-- Other, regular dependencies -->
-
-        <!--mysql-->
-        <dependency>
-            <groupId>mysql</groupId>
-            <artifactId>mysql-connector-java</artifactId>
-            <version>${mysql.version}</version>
-        </dependency>
 
         <!--gson-->
         <dependency>

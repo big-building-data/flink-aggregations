@@ -1,5 +1,6 @@
 package ch.derlin.bbdata.flink;
 
+import com.datastax.driver.core.ConsistencyLevel;
 import org.apache.flink.api.common.time.Time;
 import org.apache.flink.configuration.ConfigOption;
 import org.apache.flink.configuration.ConfigOptions;
@@ -70,6 +71,12 @@ public class Configs {
             .noDefaultValue()
             .withDescription("List of entrypoints (IP, host) to connect to Cassandra, separated by semi-colons (;).");
 
+    public static final ConfigOption<String> configConsistency = ConfigOptions
+            .key("cassandra.consistency")
+            .stringType()
+            .defaultValue("QUORUM")
+            .withDescription("Cassandra consistency level. If you have a test cluster of one host, set it to ONE.");
+
     // =============== getters
 
     public static long readGranularity(Configuration config) {
@@ -123,8 +130,19 @@ public class Configs {
         List<String> entrypoints = config.get(configEntrypoints);
         if (entrypoints.size() == 0)
             throw new RuntimeException(String.format(
-                    "Missing Cassandra entrypoing '%s' in config.", configEntrypoints.key()));
+                    "Missing Cassandra entrypoint '%s' in config.", configEntrypoints.key()));
         return entrypoints;
+    }
+
+    public static ConsistencyLevel readCassandraConsistency(Configuration config) {
+        String consistency = config.get(configConsistency);
+        try {
+            return ConsistencyLevel.valueOf(consistency);
+        } catch (Exception e) {
+            throw new RuntimeException((String.format(
+                    "Wrong consistency value provided: '%s'. " +
+                            "See com.datastax.driver.core.ConsistencyLevel for possible values.", consistency)));
+        }
     }
 
 
