@@ -42,7 +42,7 @@ jobs:
         run: |
           mkdir -p artifacts 
           cp target/flink-aggregations-*-*.jar artifacts
-          
+          echo -e "ref: $GITHUB_REF \ncommit: $GITHUB_SHA\nbuild: $(date +"%Y-%m-%dT%H:%M:%SZ")" > artifacts/info.txt
         
       - name: Upload artifacts
         uses: kittaakos/upload-artifact-as-is@v0
